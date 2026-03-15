@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block title %}{{ auction.title }} — AuctionGera{% endblock %}
+
+{% block extra_head %}
+<style>
+  body { background: var(--bg); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-layout">
+
+  <!-- ── Left: Info ── -->
+  <div>
+    <!-- Breadcrumb -->
+    <div style="margin-bottom:20px;font-size:0.85rem;color:var(--text-muted);">
+      <a href="{{ url_for('index') }}" style="color:var(--text-muted);">Home</a>
+      <span style="margin:0 8px;">›</span>
+      <span style="color:var(--text);">{{ auction.title }}</span>
+    </div>
+
+    <!-- Image -->
+    <div class="detail-image">
+      {% if auction.image_url %}
+        <img src="{{ auction.image_url }}" alt="{{ auction.title }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="detail-image-placeholder" style="display:none;">🏚</div>
+      {% else %}
+        <div class="detail-image-placeholder">🏚</div>
+      {% endif %}
+    </div>
+
+    <!-- Title & Status -->
+    <h1 class="detail-title">{{ auction.title }}</h1>
+    <div class="detail-status">
+      {% if auction.status == 'live' %}
+        <span class="status-badge status-live"><span class="live-dot"></span> Live Auction</span>
+      {% elif auction.status == 'upcoming' %}
+        <span class="status-badge status-upcoming">🗓 Upcoming</span>
+      {% elif auction.status == 'ended' %}
+        <span class="status-badge status-ended">✅ Ended</span>
+      {% else %}
+        <span class="status-badge status-ended">⛔ Cancelled</span>
+      {% endif %}
+      <span style="font-size:0.85rem;color:var(--text-muted);">
+        {{ auction.shed_type }}
+      </span>
+    </div>
+
+    <!-- Specs -->
+    <div class="detail-specs">
+      <div class="spec-item">
+        <div class="spec-label">Shed Type</div>
+        <div class="spec-value">{{ auction.shed_type }}</div>
+      </div>
+      {% if auction.dimensions %}
+      <div class="spec-item">
+        <div class="spec-label">Dimensions</div>
+        <div class="spec-value">{{ auction.dimensions }}</div>
+      </div>
+      {% endif %}
+      {% if auction.location %}
+      <div class="spec-item">
+        <div class="spec-label">Location</div>
+        <div class="spec-value">{{ auction.location }}</div>
+      </div>
+      {% endif %}
+      {% if auction.condition %}
+      <div class="spec-item">
+        <div class="spec-label">Condition</div>
+        <div class="spec-value">{{ auction.condition }}</div>
+      </div>
+      {% endif %}
+      <div class="spec-item">
+        <div class="spec-label">Auction Starts</div>
+        <div class="spec-value">{{ auction.start_time.strftime('%b %d, %Y %I:%M %p') }} UTC</div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-label">Auction Ends</div>
+        <div class="spec-value">{{ auction.end_time.strftime('%b %d, %Y %I:%M %p') }} UTC</div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-label">Starting Price</div>
+        <div class="spec-value">${{ "%.2f"|format(auction.starting_price) }}</div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-label">Bid Increment</div>
+        <div class="spec-value">${{ "%.2f"|format(auction.bid_increment) }}</div>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="detail-description">
+      <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">Description</div>
+      {{ auction.description }}
+    </div>
+  </div>
+
+  <!-- ── Right: Bid Panel ── -->
+  <div>
+    <div class="bid-panel" id="bid-form-wrap">
+
+      <!-- Winner Banner -->
+      {% if auction.status == 'ended' and auction.highest_bid %}
+        <div class="winner-banner">
+          <h3>🏆 Auction Ended!</h3>
+          <p>Won by <strong>{{ auction.highest_bid.bidder.username }}</strong></p>
+          <p>Final price: <strong style="color:var(--primary)">${{ "%.2f"|format(auction.current_price) }}</strong></p>
+        </div>
+      {% endif %}
+
+      <div class="bid-panel-title">
+        {% if auction.status == 'live' %}⚡ Place Your Bid
+        {% elif auction.status == 'upcoming' %}🗓 Upcoming Auction
+        {% else %}📋 Auction Summary{% endif %}
+      </div>
+
+      <!-- Current Price Display -->
+      <div class="current-price-display">
+        <div class="cpd-label">
+          {% if auction.status == 'ended' %}Final Price
+          {% elif auction.bid_count > 0 %}Current Bid
+          {% else %}Starting Price{% endif %}
+        </div>
+        <div class="cpd-price" id="live-price">${{ "%.2f"|format(auction.current_price) }}</div>
+        <div class="cpd-bids" id="live-bid-count">{{ auction.bid_count }} bid{{ 's' if auction.bid_count != 1 }}</div>
+      </div>
+
+      <!-- Timer -->
+      <div class="bid-timer">
+        <div class="bid-timer-label">
+          {% if auction.status == 'upcoming' %}STARTS IN
+          {% elif auction.status == 'live' %}TIME REMAINING
+          {% else %}AUCTION ENDED{% endif %}
+        </div>
+        {% if auction.status in ['live', 'upcoming'] %}
+          <div class="countdown-grid"
+               data-countdown
+               data-start="{{ auction.start_time.isoformat() }}"
+               data-end="{{ auction.end_time.isoformat() }}">
+          </div>
+        {% else %}
+          <div style="color:var(--text-muted);font-size:0.9rem;">
+            Ended {{ auction.end_time.strftime('%b %d, %Y') }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Bid Form -->
+      {% if auction.status == 'live' %}
+        {% if current_user.is_authenticated %}
+          <!-- Quick Bid Buttons -->
+          <div id="quick-bids" class="quick-bids">
+            {% set inc = auction.bid_increment %}
+            {% for mult in [1, 2, 5, 10] %}
+              <button class="quick-bid-btn"
+                      onclick="setQuickBid({{ auction.current_price + inc * mult }})">
+                +${{ "%.0f"|format(inc * mult) }}
+              </button>
+            {% endfor %}
+          </div>
+
+          <div class="bid-form">
+            <div class="bid-input-group">
+              <div class="bid-prefix">$</div>
+              <input type="number"
+                     id="bid-amount"
+                     class="bid-input"
+                     placeholder="{{ "%.2f"|format(auction.current_price + auction.bid_increment) }}"
+                     min="{{ auction.current_price + auction.bid_increment }}"
+                     step="{{ auction.bid_increment }}"
+                     onkeypress="if(event.key==='Enter') placeBid({{ auction.id }})">
+              <button class="bid-submit" onclick="placeBid({{ auction.id }})">Place Bid</button>
+            </div>
+
+            <input type="hidden" id="bid-increment" value="{{ auction.bid_increment }}">
+
+            <div class="bid-hint" id="min-bid-hint">
+              Minimum bid: <strong>${{ "%.2f"|format(auction.current_price + auction.bid_increment) }}</strong>
+              &nbsp;·&nbsp; Increment: <strong>${{ "%.2f"|format(auction.bid_increment) }}</strong>
+            </div>
+
+            <div id="bid-message" class="bid-message"></div>
+          </div>
+        {% else %}
+          <div style="text-align:center;padding:20px 0;">
+            <p style="color:var(--text-muted);margin-bottom:16px;">You must be logged in to place a bid.</p>
+            <a href="{{ url_for('login', next=request.url) }}" class="btn btn-primary btn-full">Login to Bid</a>
+            <div style="margin-top:12px;font-size:0.85rem;color:var(--text-muted);">
+              No account? <a href="{{ url_for('register') }}">Register free</a>
+            </div>
+          </div>
+        {% endif %}
+      {% elif auction.status == 'upcoming' %}
+        <div style="text-align:center;padding:12px 0;">
+          <p style="color:var(--text-muted);font-size:0.9rem;">Bidding opens {{ auction.start_time.strftime('%b %d at %I:%M %p') }} UTC</p>
+        </div>
+      {% endif %}
+
+      <!-- Bid History -->
+      {% if recent_bids %}
+        <div class="bid-history">
+          <div class="bid-history-title">Recent Bids</div>
+          <div id="bid-history-list">
+            {% for bid in recent_bids %}
+              <div class="bid-item {% if loop.first %}bid-item-top{% endif %}">
+                <span class="bid-item-user">{{ bid.bidder.username }}</span>
+                <span class="bid-item-amount">${{ "%.2f"|format(bid.amount) }}</span>
+                <span class="bid-item-time">{{ bid.created_at.strftime('%H:%M:%S') }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+    </div><!-- /.bid-panel -->
+  </div>
+
+</div><!-- /.detail-layout -->
+{% endblock %}
+
+{% block extra_scripts %}
+{% if auction.status in ['live', 'upcoming'] %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    {% if auction.status == 'live' %}
+      initAuctionDetail({{ auction.id }});
+    {% endif %}
+  });
+</script>
+{% endif %}
+{% endblock %}

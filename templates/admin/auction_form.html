@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}{% if auction %}Edit Auction{% else %}New Auction{% endif %} — AuctionGera Admin{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+
+  <div class="admin-header">
+    <div>
+      <h2 class="admin-title">{% if auction %}✏ Edit Auction{% else %}+ New Auction{% endif %}</h2>
+      <p class="admin-subtitle">{% if auction %}Update auction details and schedule.{% else %}Create a new shed auction with a custom schedule.{% endif %}</p>
+    </div>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-ghost">← Back to Dashboard</a>
+  </div>
+
+  <div style="max-width:800px;">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:36px;">
+      <form method="POST">
+
+        <!-- Title -->
+        <div class="form-group">
+          <label class="form-label">Auction Title *</label>
+          <input type="text" name="title" class="form-control"
+                 placeholder="e.g. 12×10 Garden Shed — Excellent Condition"
+                 value="{{ auction.title if auction else '' }}" required>
+        </div>
+
+        <!-- Row: Shed Type + Condition -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Shed Type *</label>
+            <select name="shed_type" class="form-control" required>
+              {% set types = ['Garden Shed', 'Workshop', 'Storage Shed', 'Barn', 'Garage', 'Tool Shed', 'Potting Shed', 'Log Cabin', 'Summerhouse', 'Lean-To', 'Other'] %}
+              {% for t in types %}
+                <option value="{{ t }}" {% if auction and auction.shed_type == t %}selected{% endif %}>{{ t }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Condition</label>
+            <select name="condition" class="form-control">
+              {% set conditions = ['Excellent', 'Very Good', 'Good', 'Fair', 'Poor', 'For Parts'] %}
+              {% for c in conditions %}
+                <option value="{{ c }}" {% if auction and auction.condition == c %}selected{% endif %}>{{ c }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- Row: Dimensions + Location -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Dimensions</label>
+            <input type="text" name="dimensions" class="form-control"
+                   placeholder="e.g. 12ft × 10ft"
+                   value="{{ auction.dimensions if auction else '' }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <input type="text" name="location" class="form-control"
+                   placeholder="e.g. Manchester, UK"
+                   value="{{ auction.location if auction else '' }}">
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label class="form-label">Description *</label>
+          <textarea name="description" class="form-control" rows="4"
+                    placeholder="Describe the shed — materials, features, history, pickup arrangements, etc." required>{{ auction.description if auction else '' }}</textarea>
+        </div>
+
+        <!-- Image URL -->
+        <div class="form-group">
+          <label class="form-label">Image URL</label>
+          <input type="url" name="image_url" class="form-control"
+                 placeholder="https://example.com/shed-photo.jpg"
+                 value="{{ auction.image_url if auction else '' }}">
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:6px;">Optional — paste a direct link to a photo of the shed.</div>
+        </div>
+
+        <!-- Pricing Row -->
+        <div style="background:var(--bg-card2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px;">
+          <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px;font-weight:700;">💰 Pricing</div>
+          <div class="form-row">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Starting Price ($) *</label>
+              <input type="number" name="starting_price" class="form-control"
+                     placeholder="500.00" min="0" step="0.01"
+                     value="{{ auction.starting_price if auction else '' }}" required>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Reserve Price ($)</label>
+              <input type="number" name="reserve_price" class="form-control"
+                     placeholder="0 = no reserve" min="0" step="0.01"
+                     value="{{ auction.reserve_price if auction else '' }}">
+            </div>
+          </div>
+          <div style="margin-top:16px;">
+            <div class="form-group" style="margin-bottom:0;max-width:260px;">
+              <label class="form-label">Bid Increment ($) *</label>
+              <input type="number" name="bid_increment" class="form-control"
+                     placeholder="50.00" min="1" step="0.01"
+                     value="{{ auction.bid_increment if auction else '50' }}" required>
+              <div style="font-size:0.8rem;color:var(--text-muted);margin-top:6px;">Minimum amount each bid must increase by.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Schedule Row -->
+        <div style="background:var(--bg-card2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:28px;">
+          <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px;font-weight:700;">📅 Schedule (UTC)</div>
+          <div class="form-row">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Start Date & Time *</label>
+              <input type="datetime-local" name="start_time" class="form-control"
+                     value="{{ auction.start_time.strftime('%Y-%m-%dT%H:%M') if auction else '' }}" required>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">End Date & Time *</label>
+              <input type="datetime-local" name="end_time" class="form-control"
+                     value="{{ auction.end_time.strftime('%Y-%m-%dT%H:%M') if auction else '' }}" required>
+            </div>
+          </div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:12px;">⚠ Times are stored in UTC. Bidding will automatically open/close at these times.</div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;gap:12px;justify-content:flex-end;">
+          <a href="{{ url_for('admin_dashboard') }}" class="btn btn-ghost">Cancel</a>
+          <button type="submit" class="btn btn-primary btn-lg">
+            {% if auction %}Save Changes{% else %}Create Auction{% endif %}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

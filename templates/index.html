@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}AuctionGera — Shed Auctions{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">🏚 Premium Shed Auctions</div>
+    <h1>Bid on Quality<br><span>Sheds & Structures</span></h1>
+    <p>Join AuctionGera for exclusive shed auctions. Find the perfect workshop, storage shed, or garden structure at the best price.</p>
+    <div class="hero-actions">
+      <a href="#live" class="btn btn-primary btn-lg">View Live Auctions</a>
+      {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('register') }}" class="btn btn-outline btn-lg">Register to Bid</a>
+      {% endif %}
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="stat-number">{{ live_auctions|length }}</span>
+        <span class="stat-label">Live Now</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">{{ upcoming_auctions|length }}</span>
+        <span class="stat-label">Upcoming</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">{{ ended_auctions|length }}</span>
+        <span class="stat-label">Completed</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Live Auctions ── -->
+<div id="live" class="section">
+  <div class="section-header">
+    <h2 class="section-title">
+      <span class="live-dot"></span>
+      Live Auctions
+      <span class="section-badge">{{ live_auctions|length }} active</span>
+    </h2>
+  </div>
+
+  {% if live_auctions %}
+    <div class="auction-grid">
+      {% for auction in live_auctions %}
+        <a href="{{ url_for('auction_detail', auction_id=auction.id) }}" style="text-decoration:none;" data-auction-id="{{ auction.id }}">
+          <div class="auction-card">
+            <div class="card-image">
+              {% if auction.image_url %}
+                <img src="{{ auction.image_url }}" alt="{{ auction.title }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="card-image-placeholder" style="display:none;">🏚<span>{{ auction.shed_type }}</span></div>
+              {% else %}
+                <div class="card-image-placeholder">🏚<span>{{ auction.shed_type }}</span></div>
+              {% endif %}
+              <div class="status-badge status-live"><span class="live-dot"></span> Live</div>
+            </div>
+            <div class="card-body">
+              <div class="card-title">{{ auction.title }}</div>
+              <div class="card-meta">
+                {% if auction.dimensions %}<span class="card-meta-item">📐 {{ auction.dimensions }}</span>{% endif %}
+                {% if auction.location   %}<span class="card-meta-item">📍 {{ auction.location }}</span>{% endif %}
+                {% if auction.condition  %}<span class="card-meta-item">⭐ {{ auction.condition }}</span>{% endif %}
+              </div>
+              <div class="card-price-row">
+                <div>
+                  <div class="price-label">Current Bid</div>
+                  <div class="price-amount">${{ "%.2f"|format(auction.current_price) }}</div>
+                </div>
+                <div class="bids-count">
+                  <span class="bids-number">{{ auction.bid_count }}</span>
+                  bid{{ 's' if auction.bid_count != 1 }}
+                </div>
+              </div>
+              <div class="card-timer">
+                ⏱
+                <div class="timer-value"
+                     data-countdown
+                     data-start="{{ auction.start_time.isoformat() }}"
+                     data-end="{{ auction.end_time.isoformat() }}">
+                </div>
+              </div>
+              <div class="btn btn-primary btn-full">Bid Now →</div>
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🏚</div>
+      <div class="empty-title">No live auctions right now</div>
+      <p>Check back soon or browse upcoming auctions below.</p>
+    </div>
+  {% endif %}
+</div>
+
+<!-- ── Upcoming Auctions ── -->
+{% if upcoming_auctions %}
+<div class="section" style="border-top: 1px solid var(--border); padding-top: 48px;">
+  <div class="section-header">
+    <h2 class="section-title">
+      🗓 Upcoming Auctions
+      <span class="section-badge">{{ upcoming_auctions|length }} scheduled</span>
+    </h2>
+  </div>
+  <div class="auction-grid">
+    {% for auction in upcoming_auctions %}
+      <a href="{{ url_for('auction_detail', auction_id=auction.id) }}" style="text-decoration:none;">
+        <div class="auction-card">
+          <div class="card-image">
+            {% if auction.image_url %}
+              <img src="{{ auction.image_url }}" alt="{{ auction.title }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="card-image-placeholder" style="display:none;">🏚<span>{{ auction.shed_type }}</span></div>
+            {% else %}
+              <div class="card-image-placeholder">🏚<span>{{ auction.shed_type }}</span></div>
+            {% endif %}
+            <div class="status-badge status-upcoming">🗓 Upcoming</div>
+          </div>
+          <div class="card-body">
+            <div class="card-title">{{ auction.title }}</div>
+            <div class="card-meta">
+              {% if auction.dimensions %}<span class="card-meta-item">📐 {{ auction.dimensions }}</span>{% endif %}
+              {% if auction.location   %}<span class="card-meta-item">📍 {{ auction.location }}</span>{% endif %}
+            </div>
+            <div class="card-price-row">
+              <div>
+                <div class="price-label">Starting Bid</div>
+                <div class="price-amount">${{ "%.2f"|format(auction.starting_price) }}</div>
+              </div>
+            </div>
+            <div class="card-timer">
+              🗓 Starts:
+              <span class="timer-value">{{ auction.start_time.strftime('%b %d, %Y %I:%M %p') }}</span>
+            </div>
+          </div>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ── Recently Ended ── -->
+{% if ended_auctions %}
+<div class="section" style="border-top: 1px solid var(--border); padding-top: 48px;">
+  <div class="section-header">
+    <h2 class="section-title">
+      ✅ Recently Completed
+    </h2>
+  </div>
+  <div class="auction-grid">
+    {% for auction in ended_auctions %}
+      <a href="{{ url_for('auction_detail', auction_id=auction.id) }}" style="text-decoration:none;">
+        <div class="auction-card" style="opacity:0.75;">
+          <div class="card-image">
+            {% if auction.image_url %}
+              <img src="{{ auction.image_url }}" alt="{{ auction.title }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="card-image-placeholder" style="display:none;">🏚</div>
+            {% else %}
+              <div class="card-image-placeholder">🏚</div>
+            {% endif %}
+            <div class="status-badge status-ended">✅ Ended</div>
+          </div>
+          <div class="card-body">
+            <div class="card-title">{{ auction.title }}</div>
+            <div class="card-price-row">
+              <div>
+                <div class="price-label">Final Price</div>
+                <div class="price-amount">${{ "%.2f"|format(auction.current_price) }}</div>
+              </div>
+              <div class="bids-count">
+                <span class="bids-number">{{ auction.bid_count }}</span>
+                bid{{ 's' if auction.bid_count != 1 }}
+              </div>
+            </div>
+            {% if auction.highest_bid %}
+              <div style="font-size:0.8rem;color:var(--text-muted);">
+                🏆 Won by <strong style="color:var(--primary);">{{ auction.highest_bid.bidder.username }}</strong>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

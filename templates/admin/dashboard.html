@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — AuctionGera{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+
+  <!-- Header -->
+  <div class="admin-header">
+    <div>
+      <h2 class="admin-title">⚙ Admin Dashboard</h2>
+      <p class="admin-subtitle">Manage all auctions, users, and bids on AuctionGera.</p>
+    </div>
+    <a href="{{ url_for('admin_new_auction') }}" class="btn btn-primary">+ New Auction</a>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-card-icon">🏚</div>
+      <div class="stat-card-value">{{ auctions|length }}</div>
+      <div class="stat-card-label">Total Auctions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon">⚡</div>
+      <div class="stat-card-value">{{ live_count }}</div>
+      <div class="stat-card-label">Live Now</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon">👤</div>
+      <div class="stat-card-value">{{ users|length }}</div>
+      <div class="stat-card-label">Registered Users</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon">💰</div>
+      <div class="stat-card-value">{{ total_bids }}</div>
+      <div class="stat-card-label">Total Bids</div>
+    </div>
+  </div>
+
+  <!-- Auctions Table -->
+  <div class="admin-table-wrap">
+    <div class="admin-table-header">
+      <h3>All Auctions</h3>
+      <a href="{{ url_for('admin_new_auction') }}" class="btn btn-primary btn-sm">+ New Auction</a>
+    </div>
+
+    {% if auctions %}
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Current Price</th>
+              <th>Bids</th>
+              <th>Start Time</th>
+              <th>End Time</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for auction in auctions %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('auction_detail', auction_id=auction.id) }}"
+                     style="color:var(--text);font-weight:600;">
+                    {{ auction.title }}
+                  </a>
+                </td>
+                <td style="color:var(--text-muted);">{{ auction.shed_type }}</td>
+                <td>
+                  {% if auction.status == 'live' %}
+                    <span class="status-badge status-live"><span class="live-dot"></span> Live</span>
+                  {% elif auction.status == 'upcoming' %}
+                    <span class="status-badge status-upcoming">🗓 Upcoming</span>
+                  {% elif auction.status == 'ended' %}
+                    <span class="status-badge status-ended">✅ Ended</span>
+                  {% else %}
+                    <span class="status-badge status-ended">⛔ Cancelled</span>
+                  {% endif %}
+                </td>
+                <td style="color:var(--primary);font-weight:700;">${{ "%.2f"|format(auction.current_price) }}</td>
+                <td style="color:var(--text-muted);">{{ auction.bid_count }}</td>
+                <td style="color:var(--text-muted);font-size:0.85rem;">{{ auction.start_time.strftime('%b %d, %Y %H:%M') }}</td>
+                <td style="color:var(--text-muted);font-size:0.85rem;">{{ auction.end_time.strftime('%b %d, %Y %H:%M') }}</td>
+                <td>
+                  <div class="table-actions">
+                    <a href="{{ url_for('admin_edit_auction', auction_id=auction.id) }}"
+                       class="btn btn-ghost btn-sm">Edit</a>
+                    <button onclick="toggleAuction({{ auction.id }}, this)"
+                            class="btn btn-sm {% if auction.is_active %}btn-ghost{% else %}btn-success{% endif %}">
+                      {{ 'Deactivate' if auction.is_active else 'Activate' }}
+                    </button>
+                    <form id="delete-form-{{ auction.id }}"
+                          action="{{ url_for('admin_delete_auction', auction_id=auction.id) }}"
+                          method="POST" style="display:inline;">
+                      <button type="button"
+                              onclick="confirmDelete({{ auction.id }}, '{{ auction.title|replace("'","\\'")|e }}')"
+                              class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🏚</div>
+        <div class="empty-title">No auctions yet</div>
+        <a href="{{ url_for('admin_new_auction') }}" class="btn btn-primary mt-4">Create First Auction</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Users Table -->
+  <div class="admin-table-wrap">
+    <div class="admin-table-header">
+      <h3>Registered Users</h3>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Joined</th>
+            <th>Bids</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+            <tr>
+              <td style="font-weight:600;">{{ user.username }}</td>
+              <td style="color:var(--text-muted);">{{ user.email }}</td>
+              <td>
+                {% if user.is_admin %}
+                  <span class="badge badge-admin">Admin</span>
+                {% else %}
+                  <span style="color:var(--text-muted);font-size:0.85rem;">Bidder</span>
+                {% endif %}
+              </td>
+              <td style="color:var(--text-muted);font-size:0.85rem;">{{ user.created_at.strftime('%b %d, %Y') }}</td>
+              <td style="color:var(--text-muted);">{{ user.bids|length }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
