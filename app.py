@@ -5,6 +5,21 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timezone
 import os
 import uuid
+import threading
+import requests as http_requests
+
+N8N_BID_WEBHOOK = os.environ.get('N8N_BID_WEBHOOK', 'https://myauction.duckdns.org/webhook/new-bid')
+N8N_PAYMENT_WEBHOOK = os.environ.get('N8N_PAYMENT_WEBHOOK', 'https://myauction.duckdns.org/webhook/auction-payment')
+
+
+def notify_n8n(url, data):
+    """Send notification to n8n webhook in background (non-blocking)."""
+    def _send():
+        try:
+            http_requests.post(url, json=data, timeout=5)
+        except Exception:
+            pass
+    threading.Thread(target=_send, daemon=True).start()
 
 app = Flask(__name__)
 
@@ -161,6 +176,29 @@ def place_bid(auction_id):
     db.session.add(bid)
     db.session.commit()
 
+    # Notify n8n — bid notification email
+    notify_n8n(N8N_BID_WEBHOOK, {
+        'type': 'new_bid',
+        'auction_id': auction.id,
+        'auction_title': auction.title,
+        'bidder': current_user.username,
+        'bidder_email': current_user.email,
+        'amount': bid_amount,
+        'bid_count': auction.bid_count,
+        'previous_price': auction.current_price - auction.bid_increment,
+        'end_time': auction.end_time.isoformat(),
+    })
+
+    # Notify n8n — log bid as transaction in Firefly III
+    notify_n8n(N8N_PAYMENT_WEBHOOK, {
+        'type': 'sale',
+        'auction_id': auction.id,
+        'auction_title': auction.title,
+        'buyer': current_user.username,
+        'seller': 'AuctionGera',
+        'amount': bid_amount,
+    })
+
     return jsonify({
         'success': True,
         'message': f'Bid of ${bid_amount:,.2f} placed successfully!',
@@ -182,14 +220,33 @@ def auction_status(auction_id):
         'time': b.created_at.strftime('%H:%M:%S')
     } for b in recent_bids]
 
+    status = auction.status
+    winner = None
+    if status == 'ended' and auction.highest_bid:
+        winner = auction.highest_bid.bidder.username
+        # Check if we already notified about this auction ending
+        session_key = f'ended_notified_{auction_id}'
+        if not session.get(session_key):
+            session[session_key] = True
+            # Log platform fee (e.g. 10% commission)
+            commission = round(auction.current_price * 0.10, 2)
+            notify_n8n(N8N_PAYMENT_WEBHOOK, {
+                'type': 'fee',
+                'auction_id': auction.id,
+                'auction_title': auction.title,
+                'buyer': winner,
+                'seller': 'AuctionGera',
+                'amount': commission,
+            })
+
     return jsonify({
-        'status': auction.status,
+        'status': status,
         'current_price': auction.current_price,
         'bid_count': auction.bid_count,
         'end_time': auction.end_time.isoformat(),
         'start_time': auction.start_time.isoformat(),
         'recent_bids': bids_data,
-        'winner': auction.highest_bid.bidder.username if auction.status == 'ended' and auction.highest_bid else None
+        'winner': winner
     })
 
 
