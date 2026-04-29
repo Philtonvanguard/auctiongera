@@ -26,6 +26,18 @@
         <label class="form-label">Confirm Password</label>
         <input type="password" name="confirm_password" class="form-control" placeholder="Repeat password" required>
       </div>
+      <div class="form-group" style="margin-bottom:10px">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:.88rem;color:var(--text-muted)">
+          <input type="checkbox" name="agree_terms" required style="margin-top:3px;flex-shrink:0;accent-color:var(--primary)">
+          <span>I agree to the <a href="{{ url_for('terms') }}" target="_blank">Terms of Service</a> and <a href="{{ url_for('privacy') }}" target="_blank">Privacy Policy</a>. I am 18 years of age or older. *</span>
+        </label>
+      </div>
+      <div class="form-group" style="margin-bottom:18px">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:.88rem;color:var(--text-muted)">
+          <input type="checkbox" name="marketing_opt_in" style="margin-top:3px;flex-shrink:0;accent-color:var(--primary)">
+          <span>I'd like to receive auction alerts, new listings, and occasional promotional emails from AuctionGera. <span style="color:var(--text-muted);font-size:.82rem">(Optional — you can change this anytime in <a href="{{ url_for('opt_out') }}">preferences</a>.)</span></span>
+        </label>
+      </div>
       <button type="submit" class="btn btn-primary btn-full btn-lg">Create Account</button>
     </form>
 

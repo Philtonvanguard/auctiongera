@@ -310,6 +310,23 @@ def logout():
     return redirect(url_for('index'))
 
 
+# ─── Legal / Compliance ───────────────────────────────────────────────────────
+
+@app.route('/terms')
+def terms():
+    return render_template('terms.html')
+
+
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
+
+@app.route('/opt-out')
+def opt_out():
+    return render_template('opt_out.html')
+
+
 # ─── Admin ────────────────────────────────────────────────────────────────────
 
 def admin_required(f):

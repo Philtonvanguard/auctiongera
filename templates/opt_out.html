@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Opt Out — AuctionGera{% endblock %}
+{% block extra_head %}
+<style>
+.legal-wrap{max-width:680px;margin:0 auto;padding:50px 24px 80px}
+.legal-eyebrow{display:inline-block;background:rgba(200,161,74,.12);color:var(--primary);border:1px solid rgba(200,161,74,.3);border-radius:30px;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:5px 14px;margin-bottom:16px}
+.legal-wrap h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,4.5vw,3rem);font-weight:800;line-height:1.15;color:var(--text);margin-bottom:8px}
+.legal-wrap h1 em{font-style:italic;color:var(--primary)}
+.legal-lead{color:var(--text-muted);font-size:1.02rem;margin-bottom:36px;padding-bottom:22px;border-bottom:1px solid var(--border)}
+.legal-back{display:inline-block;color:var(--primary);font-size:.88rem;margin-bottom:24px}
+.legal-callout{background:rgba(200,161,74,.06);border:1px solid rgba(200,161,74,.25);border-radius:var(--radius);padding:18px 22px;margin:24px 0;font-size:.95rem;color:var(--text)}
+.legal-callout strong{color:var(--primary)}
+.opt-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px 28px;margin:28px 0;box-shadow:var(--shadow)}
+.opt-radio-group{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.opt-radio-row{display:flex;align-items:flex-start;gap:12px;background:var(--bg);border:1px solid var(--border);padding:14px 16px;border-radius:var(--radius);cursor:pointer;transition:border-color var(--transition)}
+.opt-radio-row:hover{border-color:var(--primary)}
+.opt-radio-row input{margin-top:3px;flex-shrink:0;accent-color:var(--primary)}
+.opt-radio-row span{font-size:.93rem;color:var(--text)}
+.opt-radio-row span small{display:block;color:var(--text-muted);font-size:.82rem;margin-top:3px;font-weight:400}
+.opt-alt{margin-top:24px;padding-top:20px;border-top:1px solid var(--border);font-size:.92rem;color:var(--text-muted);text-align:center}
+#confirm{display:none;background:rgba(56,161,105,.08);border:1px solid rgba(56,161,105,.3);border-radius:var(--radius);padding:24px;text-align:center;margin-top:20px}
+#confirm h3{color:var(--success);font-size:1.1rem;margin-bottom:8px}
+</style>
+{% endblock %}
+{% block content %}
+<div class="legal-wrap">
+  <a href="{{ url_for('index') }}" class="legal-back">← Back to auctions</a>
+  <span class="legal-eyebrow">Your Choice</span>
+  <h1>Opt Out & <em>Data Requests</em></h1>
+  <p class="legal-lead">No questions, no friction. Tell us what you want and we'll handle it within 30 days — most requests within 72 hours.</p>
+
+  <div class="legal-callout">
+    <strong>Quick note:</strong> Opting out of marketing does <em>not</em> affect transactional notices for active auctions. If you have a winning bid or open listing, you'll still receive bid/payment/pickup emails until that transaction is complete.
+  </div>
+
+  <div class="opt-card">
+    <form id="optOutForm">
+      <div class="form-group">
+        <label class="form-label">Email Address *</label>
+        <input type="email" id="email" name="email" class="form-control" required placeholder="you@email.com" {% if current_user.is_authenticated %}value="{{ current_user.email }}"{% endif %}/>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Username <span style="color:var(--text-muted);font-weight:400">(optional, helps us find your record)</span></label>
+        <input type="text" id="username" name="username" class="form-control" placeholder="Your AuctionGera username" {% if current_user.is_authenticated %}value="{{ current_user.username }}"{% endif %}/>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">What would you like to do? *</label>
+        <div class="opt-radio-group">
+          <label class="opt-radio-row">
+            <input type="radio" name="request" value="unsubscribe" required/>
+            <span><strong>Unsubscribe from marketing emails</strong>
+              <small>Stop newsletters and promotional content. Bid/auction notifications still arrive.</small></span>
+          </label>
+          <label class="opt-radio-row">
+            <input type="radio" name="request" value="all-comms"/>
+            <span><strong>Stop all non-essential communication</strong>
+              <small>Marketing + non-required follow-ups. We'll only contact you for active bids and won items.</small></span>
+          </label>
+          <label class="opt-radio-row">
+            <input type="radio" name="request" value="access"/>
+            <span><strong>Request a copy of my data</strong>
+              <small>We'll email you everything we have on file (GDPR / CCPA right to access).</small></span>
+          </label>
+          <label class="opt-radio-row">
+            <input type="radio" name="request" value="delete"/>
+            <span><strong>Delete my account & data</strong>
+              <small>Full erasure. Note: tax/transaction records may be retained as legally required, and active bids/listings must be resolved first.</small></span>
+          </label>
+          <label class="opt-radio-row">
+            <input type="radio" name="request" value="ccpa-no-sale"/>
+            <span><strong>Do Not Sell or Share My Personal Information</strong>
+              <small>For California residents. We do not sell data, but this honors your CCPA/CPRA preference on record.</small></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Additional notes <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+        <textarea id="notes" name="notes" class="form-control" placeholder="Anything else we should know?" style="min-height:90px;resize:vertical"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full btn-lg">Submit Request</button>
+    </form>
+
+    <div id="confirm">
+      <h3>✓ Request received</h3>
+      <p style="color:var(--text)">We've recorded your request. You'll receive a confirmation email at the address you provided. We process all requests within 30 days — most within 72 hours.</p>
+    </div>
+  </div>
+
+  <div class="opt-alt">
+    Prefer email? Send your request directly to <a href="mailto:contact@vipelex.com?subject=Opt-Out%20Request">contact@vipelex.com</a>.
+  </div>
+</div>
+
+<script>
+document.getElementById('optOutForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const data = {
+    email: document.getElementById('email').value,
+    username: document.getElementById('username').value,
+    request: (document.querySelector('input[name="request"]:checked')||{}).value,
+    notes: document.getElementById('notes').value,
+    submittedAt: new Date().toISOString()
+  };
+  const subject = encodeURIComponent('AuctionGera Opt-Out Request: ' + (data.request||'unspecified'));
+  const body = encodeURIComponent(
+    'Email: ' + data.email + '\n' +
+    'Username: ' + (data.username||'(not provided)') + '\n' +
+    'Request: ' + (data.request||'(not selected)') + '\n' +
+    'Notes: ' + (data.notes||'(none)') + '\n' +
+    'Submitted: ' + data.submittedAt
+  );
+  window.location.href = 'mailto:contact@vipelex.com?subject=' + subject + '&body=' + body;
+  document.getElementById('optOutForm').style.display = 'none';
+  document.getElementById('confirm').style.display = 'block';
+});
+</script>
+{% endblock %}
