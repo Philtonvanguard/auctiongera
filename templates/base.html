@@ -24,6 +24,7 @@
       {% if current_user.is_authenticated %}
         {% if current_user.is_admin %}
           <a href="{{ url_for('admin_dashboard') }}" class="nav-link nav-admin">⚙ Admin</a>
+          <a href="{{ url_for('admin_analytics') }}" class="nav-link nav-admin">📊 Analytics</a>
         {% endif %}
         <span class="nav-user">👤 {{ current_user.username }}</span>
         <a href="{{ url_for('logout') }}" class="btn btn-outline-sm">Logout</a>
@@ -73,5 +74,48 @@
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% block extra_scripts %}{% endblock %}
+
+<!-- Privacy-first analytics beacon — no cookies, no IP stored -->
+<script>
+(function(){
+  try {
+    var p = new URLSearchParams({
+      p: location.pathname,
+      r: document.referrer ? new URL(document.referrer).hostname : ''
+    });
+    navigator.sendBeacon('/api/hit', p);
+  } catch(e) {}
+})();
+</script>
+
+<!--Start of Tawk.to Script — AuctionGera-->
+<!--SETUP REQUIRED: Replace AG_PROP_ID and AG_WID with your Tawk.to property values-->
+<!--Get these from: Tawk.to Dashboard > Administration > Properties > AuctionGera > Chat Widget > Direct Chat Link-->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/AG_PROP_ID/AG_WID';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+<script type="text/javascript">
+Tawk_API.onLoad = function(){
+  Tawk_API.setAttributes({
+    'property': 'auctiongera.vipelex.com',
+    'page': window.location.pathname
+  }, function(error){});
+  {% if current_user and current_user.is_authenticated %}
+  Tawk_API.setAttributes({
+    'name': '{{ current_user.name | default("") | e }}',
+    'email': '{{ current_user.email | default("") | e }}'
+  }, function(error){});
+  {% endif %}
+};
+</script>
+<!--End of Tawk.to Script — AuctionGera-->
 </body>
 </html>

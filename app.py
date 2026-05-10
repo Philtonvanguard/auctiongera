@@ -2,11 +2,12 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import os
 import uuid
 import threading
 import requests as http_requests
+from sqlalchemy import text
 
 N8N_BID_WEBHOOK = os.environ.get('N8N_BID_WEBHOOK', 'https://myauction.duckdns.org/webhook/new-bid')
 N8N_PAYMENT_WEBHOOK = os.environ.get('N8N_PAYMENT_WEBHOOK', 'https://myauction.duckdns.org/webhook/auction-payment')
@@ -106,6 +107,15 @@ class Bid(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     ip_address = db.Column(db.String(50))
+
+
+# ── Privacy-first analytics — no IP, no cookies, no PII ─────────────────────
+class PageView(db.Model):
+    __tablename__ = 'pageview'
+    id   = db.Column(db.Integer, primary_key=True)
+    path = db.Column(db.String(255), nullable=False, index=True)
+    ref  = db.Column(db.String(255))          # referrer hostname only
+    ts   = db.Column(db.Integer, nullable=False, index=True)  # unix epoch
 
 
 @login_manager.user_loader
@@ -327,6 +337,21 @@ def opt_out():
     return render_template('opt_out.html')
 
 
+# ─── Analytics hit endpoint ───────────────────────────────────────────────────
+# Same-origin beacon — no CORS needed. No IP stored. No cookies.
+@app.route('/api/hit', methods=['POST'])
+def analytics_hit():
+    try:
+        data = request.get_json(silent=True) or request.form
+        path = str(data.get('p') or data.get('path') or '/')[:255]
+        ref  = str(data.get('r') or data.get('ref') or '')[:255] or None
+        db.session.add(PageView(path=path, ref=ref, ts=int(datetime.utcnow().timestamp())))
+        db.session.commit()
+    except Exception:
+        pass
+    return '', 204
+
+
 # ─── Admin ────────────────────────────────────────────────────────────────────
 
 def admin_required(f):
@@ -432,6 +457,23 @@ def admin_delete_auction(auction_id):
     db.session.commit()
     flash('Auction deleted.', 'info')
     return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/analytics')
+@login_required
+@admin_required
+def admin_analytics():
+    days = int(request.args.get('days', 30))
+    since_ts = int((datetime.utcnow() - timedelta(days=days)).timestamp())
+
+    totals   = db.session.execute(text('SELECT COUNT(*) as hits, COUNT(DISTINCT path) as pages FROM pageview WHERE ts >= :s'), {'s': since_ts}).fetchone()
+    by_day   = db.session.execute(text('SELECT date(ts, \'unixepoch\') as day, COUNT(*) as hits FROM pageview WHERE ts >= :s GROUP BY day ORDER BY day DESC LIMIT :d'), {'s': since_ts, 'd': days}).fetchall()
+    top_pages= db.session.execute(text('SELECT path, COUNT(*) as hits FROM pageview WHERE ts >= :s GROUP BY path ORDER BY hits DESC LIMIT 15'), {'s': since_ts}).fetchall()
+    top_refs = db.session.execute(text('SELECT ref, COUNT(*) as hits FROM pageview WHERE ts >= :s AND ref IS NOT NULL AND ref != \'\' GROUP BY ref ORDER BY hits DESC LIMIT 10'), {'s': since_ts}).fetchall()
+
+    return render_template('admin/analytics.html',
+        totals=totals, by_day=list(reversed(by_day)),
+        top_pages=top_pages, top_refs=top_refs, days=days)
 
 
 @app.route('/admin/auction/<int:auction_id>/toggle', methods=['POST'])

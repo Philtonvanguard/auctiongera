@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Traffic Analytics — AuctionGera Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+  .an-nav { display:flex; gap:8px; margin-bottom:28px; flex-wrap:wrap; align-items:center; }
+  .an-nav a { font-size:.8rem; padding:6px 14px; border-radius:6px; border:1px solid #ddd; color:#666; text-decoration:none; }
+  .an-nav a.active { background:#2d5016; color:#fff; border-color:#2d5016; font-weight:700; }
+  .an-nav .sep { color:#ccc; font-size:.8rem; margin:0 4px; }
+  .an-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:28px; }
+  .an-card { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:20px 24px; }
+  .an-card .lbl { font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#9ca3af; margin-bottom:6px; }
+  .an-card .val { font-size:2.2rem; font-weight:800; color:#111; line-height:1; }
+  .an-section { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:24px; margin-bottom:20px; }
+  .an-section h3 { font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#9ca3af; margin-bottom:16px; }
+  .an-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #f3f4f6; font-size:.875rem; }
+  .an-row:last-child { border-bottom:none; }
+  .an-row .name { flex:1; color:#374151; font-family:monospace; font-size:.82rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .an-row .bar  { height:4px; background:#2d5016; border-radius:2px; opacity:.4; flex-shrink:0; }
+  .an-row .cnt  { font-weight:700; color:#2d5016; min-width:40px; text-align:right; }
+  .chart { display:flex; align-items:flex-end; gap:3px; height:90px; margin-top:8px; overflow:hidden; }
+  .chart-col { display:flex; flex-direction:column; align-items:center; flex:1; gap:4px; min-width:0; }
+  .chart-bar { width:100%; background:#2d5016; border-radius:2px 2px 0 0; opacity:.65; min-height:2px; }
+  .chart-lbl { font-size:.55rem; color:#9ca3af; writing-mode:vertical-rl; transform:rotate(180deg); white-space:nowrap; }
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media(max-width:640px){ .two-col{grid-template-columns:1fr;} }
+  .privacy-note { font-size:.78rem; color:#6b7280; padding:10px 14px; background:#f9fafb; border-radius:6px; border-left:3px solid #2d5016; margin-bottom:24px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+
+  <div class="admin-header">
+    <div>
+      <h2 class="admin-title">📊 Traffic Analytics</h2>
+      <p class="admin-subtitle">Cookie-free · No IP stored · GDPR/CCPA compliant</p>
+    </div>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-sm">← Dashboard</a>
+  </div>
+
+  <p class="privacy-note">Only page path and referrer hostname are stored. No IP addresses, no cookies, no personal data.</p>
+
+  <!-- Filters -->
+  <div class="an-nav">
+    <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;">Period</span>
+    <a href="{{ url_for('admin_analytics', days=7) }}"  class="{{ 'active' if days==7  else '' }}">7 days</a>
+    <a href="{{ url_for('admin_analytics', days=30) }}" class="{{ 'active' if days==30 else '' }}">30 days</a>
+    <a href="{{ url_for('admin_analytics', days=90) }}" class="{{ 'active' if days==90 else '' }}">90 days</a>
+  </div>
+
+  <!-- Totals -->
+  <div class="an-grid">
+    <div class="an-card">
+      <div class="lbl">Pageviews</div>
+      <div class="val">{{ totals.hits if totals else 0 }}</div>
+    </div>
+    <div class="an-card">
+      <div class="lbl">Unique Pages</div>
+      <div class="val">{{ totals.pages if totals else 0 }}</div>
+    </div>
+    <div class="an-card">
+      <div class="lbl">Period</div>
+      <div class="val" style="font-size:1.4rem;">{{ days }}d</div>
+    </div>
+  </div>
+
+  <!-- Daily chart -->
+  {% if by_day %}
+  {% set max_hits = namespace(v=1) %}
+  {% for d in by_day %}{% if d.hits > max_hits.v %}{% set max_hits.v = d.hits %}{% endif %}{% endfor %}
+  <div class="an-section">
+    <h3>Pageviews by Day</h3>
+    <div class="chart">
+      {% for d in by_day %}
+      <div class="chart-col" title="{{ d.day }}: {{ d.hits }}">
+        <div class="chart-bar" style="height:{{ [2, ((d.hits / max_hits.v) * 84)|int]|max }}px;"></div>
+        <div class="chart-lbl">{{ d.day[5:] }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="two-col">
+
+    <!-- Top pages -->
+    <div class="an-section">
+      <h3>Top Pages</h3>
+      {% if top_pages %}
+        {% set max_p = top_pages[0].hits %}
+        {% for p in top_pages %}
+        <div class="an-row">
+          <div class="name">{{ p.path }}</div>
+          <div class="bar" style="width:{{ ((p.hits / max_p) * 80)|int }}px;"></div>
+          <div class="cnt">{{ p.hits }}</div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p style="color:#9ca3af;font-size:.85rem;">No data yet — visit the site to start tracking.</p>
+      {% endif %}
+    </div>
+
+    <!-- Top referrers -->
+    <div class="an-section">
+      <h3>Top Referrers</h3>
+      {% if top_refs %}
+        {% set max_r = top_refs[0].hits %}
+        {% for r in top_refs %}
+        <div class="an-row">
+          <div class="name">{{ r.ref or '(direct)' }}</div>
+          <div class="bar" style="width:{{ ((r.hits / max_r) * 80)|int }}px;"></div>
+          <div class="cnt">{{ r.hits }}</div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p style="color:#9ca3af;font-size:.85rem;">No referrer data yet.</p>
+      {% endif %}
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
