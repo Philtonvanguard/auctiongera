@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏚</text></svg>">
   {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -88,15 +89,14 @@
 })();
 </script>
 
-<!--Start of Tawk.to Script — AuctionGera-->
-<!--SETUP REQUIRED: Replace AG_PROP_ID and AG_WID with your Tawk.to property values-->
-<!--Get these from: Tawk.to Dashboard > Administration > Properties > AuctionGera > Chat Widget > Direct Chat Link-->
+{% if config.TAWK_PROPERTY_ID and config.TAWK_WIDGET_ID %}
+<!--Start of Tawk.to Script — AuctionGera (enable via TAWK_PROPERTY_ID + TAWK_WIDGET_ID env vars)-->
 <script type="text/javascript">
 var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
 (function(){
 var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
 s1.async=true;
-s1.src='https://embed.tawk.to/AG_PROP_ID/AG_WID';
+s1.src='https://embed.tawk.to/{{ config.TAWK_PROPERTY_ID }}/{{ config.TAWK_WIDGET_ID }}';
 s1.charset='UTF-8';
 s1.setAttribute('crossorigin','*');
 s0.parentNode.insertBefore(s1,s0);
@@ -110,12 +110,13 @@ Tawk_API.onLoad = function(){
   }, function(error){});
   {% if current_user and current_user.is_authenticated %}
   Tawk_API.setAttributes({
-    'name': '{{ current_user.name | default("") | e }}',
+    'name': '{{ current_user.username | default("") | e }}',
     'email': '{{ current_user.email | default("") | e }}'
   }, function(error){});
   {% endif %}
 };
 </script>
 <!--End of Tawk.to Script — AuctionGera-->
+{% endif %}
 </body>
 </html>

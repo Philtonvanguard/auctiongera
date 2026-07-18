@@ -35,6 +35,11 @@ if database_url.startswith('postgres://'):
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Tawk.to chat widget renders only when BOTH are set (Render > Environment).
+# Get the two IDs from the widget embed code: embed.tawk.to/<property>/<widget>
+app.config['TAWK_PROPERTY_ID'] = os.environ.get('TAWK_PROPERTY_ID', '')
+app.config['TAWK_WIDGET_ID'] = os.environ.get('TAWK_WIDGET_ID', '')
+
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
