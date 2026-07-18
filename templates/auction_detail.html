@@ -23,9 +23,9 @@
     <div class="detail-image">
       {% if auction.image_url %}
         <img src="{{ auction.image_url }}" alt="{{ auction.title }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="detail-image-placeholder" style="display:none;">🏚</div>
+        <div class="detail-image-placeholder" style="display:none;"><svg class="icon icon-xl"><use href="#i-shed"/></svg></div>
       {% else %}
-        <div class="detail-image-placeholder">🏚</div>
+        <div class="detail-image-placeholder"><svg class="icon icon-xl"><use href="#i-shed"/></svg></div>
       {% endif %}
     </div>
 
@@ -35,11 +35,11 @@
       {% if auction.status == 'live' %}
         <span class="status-badge status-live"><span class="live-dot"></span> Live Auction</span>
       {% elif auction.status == 'upcoming' %}
-        <span class="status-badge status-upcoming">🗓 Upcoming</span>
+        <span class="status-badge status-upcoming"><svg class="icon icon-sm"><use href="#i-calendar"/></svg> Upcoming</span>
       {% elif auction.status == 'ended' %}
-        <span class="status-badge status-ended">✅ Ended</span>
+        <span class="status-badge status-ended"><svg class="icon icon-sm"><use href="#i-check"/></svg> Ended</span>
       {% else %}
-        <span class="status-badge status-ended">⛔ Cancelled</span>
+        <span class="status-badge status-ended">Cancelled</span>
       {% endif %}
       <span style="font-size:0.85rem;color:var(--text-muted);">
         {{ auction.shed_type }}
@@ -102,16 +102,16 @@
       <!-- Winner Banner -->
       {% if auction.status == 'ended' and auction.highest_bid %}
         <div class="winner-banner">
-          <h3>🏆 Auction Ended!</h3>
+          <h3><svg class="icon"><use href="#i-trophy"/></svg> Auction Ended!</h3>
           <p>Won by <strong>{{ auction.highest_bid.bidder.username }}</strong></p>
           <p>Final price: <strong style="color:var(--primary)">${{ "%.2f"|format(auction.current_price) }}</strong></p>
         </div>
       {% endif %}
 
       <div class="bid-panel-title">
-        {% if auction.status == 'live' %}⚡ Place Your Bid
-        {% elif auction.status == 'upcoming' %}🗓 Upcoming Auction
-        {% else %}📋 Auction Summary{% endif %}
+        {% if auction.status == 'live' %}<svg class="icon"><use href="#i-bolt"/></svg> Place Your Bid
+        {% elif auction.status == 'upcoming' %}<svg class="icon"><use href="#i-calendar"/></svg> Upcoming Auction
+        {% else %}<svg class="icon"><use href="#i-check"/></svg> Auction Summary{% endif %}
       </div>
 
       <!-- Current Price Display -->

@@ -3,7 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}AuctionGera — Shed Auctions{% endblock %}</title>
+  <title>{% block title %}AuctionGera — Shed &amp; Structure Auctions{% endblock %}</title>
+  <meta name="description" content="Bid on quality sheds, workshops, and garden structures. Live auctions with transparent bidding, verified listings, and no hidden fees.">
+  <meta property="og:site_name" content="AuctionGera">
+  <meta property="og:title" content="AuctionGera — Shed &amp; Structure Auctions">
+  <meta property="og:description" content="Live auctions for quality sheds, workshops, and garden structures.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%230e1628'/%3E%3Cpath d='M24 9 8 22h4v15h24V22h4L24 9z' fill='%23c8a14a'/%3E%3Crect x='20' y='27' width='8' height='10' rx='1' fill='%230e1628'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -12,11 +18,33 @@
 </head>
 <body>
 
+<!-- ── SVG Icon Sprite ── -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-shed" viewBox="0 0 24 24"><path d="M12 3 2 11h2.5v9h15v-9H22L12 3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><rect x="9.5" y="13.5" width="5" height="6.5" rx=".5" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-gavel" viewBox="0 0 24 24"><path d="m13.5 6.5 4 4M6.5 13.5l4 4M9 11l6-6 3 3-6 6-3-3zM3 21h9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-ruler" viewBox="0 0 24 24"><rect x="2.5" y="9" width="19" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 9v3m5-3v3m5-3v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.7 5.8 6.3.8-4.6 4.3 1.2 6.1L12 17l-5.6 3 1.2-6.1L3 9.6l6.3-.8L12 3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M8 3v4m8-4v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m8.5 12.5 2.5 2.5 4.5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4h8v6a4 4 0 0 1-8 0V4zM8 5H4.5v2A3.5 3.5 0 0 0 8 10.5M16 5h3.5v2A3.5 3.5 0 0 1 16 10.5M12 14v4m-4 3h8m-8 0 1-3h6l1 3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 20a7 7 0 0 1 14 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11L9.5 22 19 10h-6.5L13 2z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2.5 4.5 5.5v6c0 5 3.2 8.3 7.5 10 4.3-1.7 7.5-5 7.5-10v-6L12 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 11.5 2.2 2.2L15.5 9.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.5-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.6a7 7 0 0 0-2 1.2l-2.3-1-2 3.5 2 1.5a7.2 7.2 0 0 0 0 2.4l-2 1.5 2 3.5 2.3-1a7 7 0 0 0 2 1.2l.4 2.6h4l.4-2.6a7 7 0 0 0 2-1.2l2.3 1 2-3.5-2-1.5c.06-.4.1-.8.1-1.2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10m5.5 10V4M15 20v-7m5.5 7V7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
 <!-- ── Navbar ── -->
-<nav class="navbar">
+<nav class="navbar" id="navbar">
   <div class="nav-container">
     <a href="{{ url_for('index') }}" class="nav-logo">
-      <span class="logo-icon">🏚</span>
+      <span class="logo-mark"><svg class="icon icon-lg"><use href="#i-shed"/></svg></span>
       <span class="logo-text">Auction<strong>Gera</strong></span>
     </a>
 
@@ -24,10 +52,10 @@
       <a href="{{ url_for('index') }}" class="nav-link">Auctions</a>
       {% if current_user.is_authenticated %}
         {% if current_user.is_admin %}
-          <a href="{{ url_for('admin_dashboard') }}" class="nav-link nav-admin">⚙ Admin</a>
-          <a href="{{ url_for('admin_analytics') }}" class="nav-link nav-admin">📊 Analytics</a>
+          <a href="{{ url_for('admin_dashboard') }}" class="nav-link nav-admin"><svg class="icon icon-sm"><use href="#i-settings"/></svg> Admin</a>
+          <a href="{{ url_for('admin_analytics') }}" class="nav-link nav-admin"><svg class="icon icon-sm"><use href="#i-chart"/></svg> Analytics</a>
         {% endif %}
-        <span class="nav-user">👤 {{ current_user.username }}</span>
+        <span class="nav-user"><svg class="icon icon-sm"><use href="#i-user"/></svg> {{ current_user.username }}</span>
         <a href="{{ url_for('logout') }}" class="btn btn-outline-sm">Logout</a>
       {% else %}
         <a href="{{ url_for('login') }}" class="nav-link">Login</a>
@@ -35,7 +63,7 @@
       {% endif %}
     </div>
 
-    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+    <button class="nav-toggle" aria-label="Menu" onclick="document.querySelector('.nav-links').classList.toggle('open')"><svg class="icon"><use href="#i-menu"/></svg></button>
   </div>
 </nav>
 
@@ -57,24 +85,60 @@
 <!-- ── Footer ── -->
 <footer class="footer">
   <div class="footer-inner">
-    <div class="footer-brand">
-      <span class="logo-icon">🏚</span>
-      <span class="logo-text">Auction<strong>Gera</strong></span>
-      <p>Your trusted shed auction platform.</p>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <span class="logo-mark"><svg class="icon icon-lg"><use href="#i-shed"/></svg></span>
+          <span class="logo-text">Auction<strong>Gera</strong></span>
+        </div>
+        <p>The trusted auction platform for quality sheds, workshops, and garden structures. Transparent bidding, verified listings, no hidden fees.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Platform</div>
+        <a href="{{ url_for('index') }}">Live Auctions</a>
+        <a href="{{ url_for('index') }}#how">How It Works</a>
+        {% if not current_user.is_authenticated %}
+          <a href="{{ url_for('register') }}">Create Account</a>
+          <a href="{{ url_for('login') }}">Login</a>
+        {% endif %}
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Legal</div>
+        <a href="{{ url_for('terms') }}">Terms of Service</a>
+        <a href="{{ url_for('privacy') }}">Privacy Policy</a>
+        <a href="{{ url_for('opt_out') }}">Opt Out / Data Requests</a>
+      </div>
     </div>
-    <div class="footer-copy">
-      © 2024 AuctionGera. All rights reserved.
-      <span class="footer-legal-links">
-        &nbsp;·&nbsp;<a href="{{ url_for('terms') }}">Terms of Service</a>
-        &nbsp;·&nbsp;<a href="{{ url_for('privacy') }}">Privacy Policy</a>
-        &nbsp;·&nbsp;<a href="{{ url_for('opt_out') }}">Opt Out / Data Requests</a>
-      </span>
-    </div>
+    <div class="footer-copy">© 2026 AuctionGera. All rights reserved.</div>
   </div>
 </footer>
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% block extra_scripts %}{% endblock %}
+
+<!-- Scroll reveal + navbar shadow -->
+<script>
+(function(){
+  var nav = document.getElementById('navbar');
+  if (nav) {
+    var onScroll = function(){ nav.classList.toggle('scrolled', window.scrollY > 8); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if (e.isIntersecting) { e.target.classList.add('revealed'); io.unobserve(e.target); } });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+  } else {
+    document.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('revealed'); });
+  }
+  // Failsafe: never leave content hidden if observer callbacks are throttled
+  setTimeout(function(){
+    document.querySelectorAll('.reveal:not(.revealed)').forEach(function(el){ el.classList.add('revealed'); });
+  }, 2500);
+})();
+</script>
 
 <!-- Privacy-first analytics beacon — no cookies, no IP stored -->
 <script>

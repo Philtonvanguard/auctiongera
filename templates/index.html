@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% block title %}AuctionGera — Shed Auctions{% endblock %}
+{% block title %}AuctionGera — Shed &amp; Structure Auctions{% endblock %}
 
 {% block content %}
 
 <!-- ── Hero ── -->
 <section class="hero">
   <div class="hero-content">
-    <div class="hero-badge">🏚 Premium Shed Auctions</div>
-    <h1>Bid on Quality<br><span>Sheds & Structures</span></h1>
-    <p>Join AuctionGera for exclusive shed auctions. Find the perfect workshop, storage shed, or garden structure at the best price.</p>
+    <div class="hero-badge"><svg class="icon icon-sm"><use href="#i-gavel"/></svg> Premium Shed Auctions</div>
+    <h1>Bid on Quality<br><span>Sheds &amp; Structures</span></h1>
+    <p>Live auctions for workshops, storage sheds, and garden structures. Transparent bidding, verified listings, and prices the retail lot can't touch.</p>
     <div class="hero-actions">
-      <a href="#live" class="btn btn-primary btn-lg">View Live Auctions</a>
+      <a href="#live" class="btn btn-primary btn-lg">View Live Auctions <svg class="icon"><use href="#i-arrow"/></svg></a>
       {% if not current_user.is_authenticated %}
         <a href="{{ url_for('register') }}" class="btn btn-outline btn-lg">Register to Bid</a>
       {% endif %}
@@ -32,6 +32,14 @@
   </div>
 </section>
 
+<!-- ── Trust Strip ── -->
+<div class="trust-strip">
+  <div class="trust-item"><svg class="icon"><use href="#i-shield"/></svg> Verified Listings</div>
+  <div class="trust-item"><svg class="icon"><use href="#i-bolt"/></svg> Real-Time Bidding</div>
+  <div class="trust-item"><svg class="icon"><use href="#i-check"/></svg> No Hidden Fees</div>
+  <div class="trust-item"><svg class="icon"><use href="#i-clock"/></svg> Timed Auctions</div>
+</div>
+
 <!-- ── Live Auctions ── -->
 <div id="live" class="section">
   <div class="section-header">
@@ -46,22 +54,22 @@
     <div class="auction-grid">
       {% for auction in live_auctions %}
         <a href="{{ url_for('auction_detail', auction_id=auction.id) }}" style="text-decoration:none;" data-auction-id="{{ auction.id }}">
-          <div class="auction-card">
+          <div class="auction-card reveal">
             <div class="card-image">
               {% if auction.image_url %}
-                <img src="{{ auction.image_url }}" alt="{{ auction.title }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                <div class="card-image-placeholder" style="display:none;">🏚<span>{{ auction.shed_type }}</span></div>
+                <img src="{{ auction.image_url }}" alt="{{ auction.title }}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="card-image-placeholder" style="display:none;"><svg class="icon icon-xl"><use href="#i-shed"/></svg><span>{{ auction.shed_type }}</span></div>
               {% else %}
-                <div class="card-image-placeholder">🏚<span>{{ auction.shed_type }}</span></div>
+                <div class="card-image-placeholder"><svg class="icon icon-xl"><use href="#i-shed"/></svg><span>{{ auction.shed_type }}</span></div>
               {% endif %}
               <div class="status-badge status-live"><span class="live-dot"></span> Live</div>
             </div>
             <div class="card-body">
               <div class="card-title">{{ auction.title }}</div>
               <div class="card-meta">
-                {% if auction.dimensions %}<span class="card-meta-item">📐 {{ auction.dimensions }}</span>{% endif %}
-                {% if auction.location   %}<span class="card-meta-item">📍 {{ auction.location }}</span>{% endif %}
-                {% if auction.condition  %}<span class="card-meta-item">⭐ {{ auction.condition }}</span>{% endif %}
+                {% if auction.dimensions %}<span class="card-meta-item"><svg class="icon"><use href="#i-ruler"/></svg> {{ auction.dimensions }}</span>{% endif %}
+                {% if auction.location   %}<span class="card-meta-item"><svg class="icon"><use href="#i-pin"/></svg> {{ auction.location }}</span>{% endif %}
+                {% if auction.condition  %}<span class="card-meta-item"><svg class="icon"><use href="#i-star"/></svg> {{ auction.condition }}</span>{% endif %}
               </div>
               <div class="card-price-row">
                 <div>
@@ -74,14 +82,14 @@
                 </div>
               </div>
               <div class="card-timer">
-                ⏱
+                <svg class="icon"><use href="#i-clock"/></svg>
                 <div class="timer-value"
                      data-countdown
                      data-start="{{ auction.start_time.isoformat() }}"
                      data-end="{{ auction.end_time.isoformat() }}">
                 </div>
               </div>
-              <div class="btn btn-primary btn-full">Bid Now →</div>
+              <div class="btn btn-primary btn-full">Bid Now <svg class="icon"><use href="#i-arrow"/></svg></div>
             </div>
           </div>
         </a>
@@ -89,7 +97,7 @@
     </div>
   {% else %}
     <div class="empty-state">
-      <div class="empty-icon">🏚</div>
+      <div class="empty-icon"><svg class="icon icon-xl"><use href="#i-shed"/></svg></div>
       <div class="empty-title">No live auctions right now</div>
       <p>Check back soon or browse upcoming auctions below.</p>
     </div>
@@ -101,28 +109,29 @@
 <div class="section" style="border-top: 1px solid var(--border); padding-top: 48px;">
   <div class="section-header">
     <h2 class="section-title">
-      🗓 Upcoming Auctions
+      <svg class="icon"><use href="#i-calendar"/></svg>
+      Upcoming Auctions
       <span class="section-badge">{{ upcoming_auctions|length }} scheduled</span>
     </h2>
   </div>
   <div class="auction-grid">
     {% for auction in upcoming_auctions %}
       <a href="{{ url_for('auction_detail', auction_id=auction.id) }}" style="text-decoration:none;">
-        <div class="auction-card">
+        <div class="auction-card reveal">
           <div class="card-image">
             {% if auction.image_url %}
-              <img src="{{ auction.image_url }}" alt="{{ auction.title }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-              <div class="card-image-placeholder" style="display:none;">🏚<span>{{ auction.shed_type }}</span></div>
+              <img src="{{ auction.image_url }}" alt="{{ auction.title }}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="card-image-placeholder" style="display:none;"><svg class="icon icon-xl"><use href="#i-shed"/></svg><span>{{ auction.shed_type }}</span></div>
             {% else %}
-              <div class="card-image-placeholder">🏚<span>{{ auction.shed_type }}</span></div>
+              <div class="card-image-placeholder"><svg class="icon icon-xl"><use href="#i-shed"/></svg><span>{{ auction.shed_type }}</span></div>
             {% endif %}
-            <div class="status-badge status-upcoming">🗓 Upcoming</div>
+            <div class="status-badge status-upcoming"><svg class="icon icon-sm"><use href="#i-calendar"/></svg> Upcoming</div>
           </div>
           <div class="card-body">
             <div class="card-title">{{ auction.title }}</div>
             <div class="card-meta">
-              {% if auction.dimensions %}<span class="card-meta-item">📐 {{ auction.dimensions }}</span>{% endif %}
-              {% if auction.location   %}<span class="card-meta-item">📍 {{ auction.location }}</span>{% endif %}
+              {% if auction.dimensions %}<span class="card-meta-item"><svg class="icon"><use href="#i-ruler"/></svg> {{ auction.dimensions }}</span>{% endif %}
+              {% if auction.location   %}<span class="card-meta-item"><svg class="icon"><use href="#i-pin"/></svg> {{ auction.location }}</span>{% endif %}
             </div>
             <div class="card-price-row">
               <div>
@@ -131,7 +140,7 @@
               </div>
             </div>
             <div class="card-timer">
-              🗓 Starts:
+              <svg class="icon"><use href="#i-calendar"/></svg> Starts:
               <span class="timer-value">{{ auction.start_time.strftime('%b %d, %Y %I:%M %p') }}</span>
             </div>
           </div>
@@ -142,26 +151,57 @@
 </div>
 {% endif %}
 
+<!-- ── How It Works ── -->
+<div id="how" class="section" style="border-top: 1px solid var(--border); padding-top: 48px;">
+  <div class="section-header">
+    <h2 class="section-title">
+      <svg class="icon"><use href="#i-gavel"/></svg>
+      How It Works
+    </h2>
+  </div>
+  <div class="how-grid">
+    <div class="how-card reveal">
+      <div class="how-step">1</div>
+      <div class="how-icon"><svg class="icon icon-lg"><use href="#i-user"/></svg></div>
+      <div class="how-title">Create a Free Account</div>
+      <div class="how-text">Register in under a minute. No fees to join, no credit card required to browse or watch auctions.</div>
+    </div>
+    <div class="how-card reveal">
+      <div class="how-step">2</div>
+      <div class="how-icon"><svg class="icon icon-lg"><use href="#i-gavel"/></svg></div>
+      <div class="how-title">Place Your Bid</div>
+      <div class="how-text">Bid in real time with live price updates and quick-bid buttons. Every listing shows dimensions, condition, and location up front.</div>
+    </div>
+    <div class="how-card reveal">
+      <div class="how-step">3</div>
+      <div class="how-icon"><svg class="icon icon-lg"><use href="#i-trophy"/></svg></div>
+      <div class="how-title">Win &amp; Arrange Pickup</div>
+      <div class="how-text">Highest bid when the timer hits zero wins. We contact you same-day to arrange payment and delivery or pickup.</div>
+    </div>
+  </div>
+</div>
+
 <!-- ── Recently Ended ── -->
 {% if ended_auctions %}
 <div class="section" style="border-top: 1px solid var(--border); padding-top: 48px;">
   <div class="section-header">
     <h2 class="section-title">
-      ✅ Recently Completed
+      <svg class="icon"><use href="#i-check"/></svg>
+      Recently Completed
     </h2>
   </div>
   <div class="auction-grid">
     {% for auction in ended_auctions %}
       <a href="{{ url_for('auction_detail', auction_id=auction.id) }}" style="text-decoration:none;">
-        <div class="auction-card" style="opacity:0.75;">
+        <div class="auction-card reveal" style="opacity:0.8;">
           <div class="card-image">
             {% if auction.image_url %}
-              <img src="{{ auction.image_url }}" alt="{{ auction.title }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-              <div class="card-image-placeholder" style="display:none;">🏚</div>
+              <img src="{{ auction.image_url }}" alt="{{ auction.title }}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="card-image-placeholder" style="display:none;"><svg class="icon icon-xl"><use href="#i-shed"/></svg></div>
             {% else %}
-              <div class="card-image-placeholder">🏚</div>
+              <div class="card-image-placeholder"><svg class="icon icon-xl"><use href="#i-shed"/></svg></div>
             {% endif %}
-            <div class="status-badge status-ended">✅ Ended</div>
+            <div class="status-badge status-ended"><svg class="icon icon-sm"><use href="#i-check"/></svg> Ended</div>
           </div>
           <div class="card-body">
             <div class="card-title">{{ auction.title }}</div>
@@ -176,8 +216,8 @@
               </div>
             </div>
             {% if auction.highest_bid %}
-              <div style="font-size:0.8rem;color:var(--text-muted);">
-                🏆 Won by <strong style="color:var(--primary);">{{ auction.highest_bid.bidder.username }}</strong>
+              <div style="font-size:0.8rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+                <svg class="icon icon-sm" style="color:var(--primary);"><use href="#i-trophy"/></svg> Won by <strong style="color:var(--primary);">{{ auction.highest_bid.bidder.username }}</strong>
               </div>
             {% endif %}
           </div>
