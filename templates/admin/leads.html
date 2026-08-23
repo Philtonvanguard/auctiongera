@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block title %}Buyer Leads — AuctionGera Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+  .ld-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:24px; }
+  .ld-card { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:16px 20px; }
+  .ld-card .lbl { font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#9ca3af; margin-bottom:6px; }
+  .ld-card .val { font-size:1.9rem; font-weight:800; color:#111; line-height:1; }
+  .ld-panel { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:20px 24px; margin-bottom:20px; }
+  .ld-panel h3 { font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#9ca3af; margin-bottom:14px; }
+  .ld-filters { display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; }
+  .ld-filters label { display:block; font-size:.66rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#9ca3af; margin-bottom:4px; }
+  .ld-filters select, .ld-filters input[type=text], .ld-filters input[type=number] {
+    padding:7px 10px; border:1px solid #d1d5db; border-radius:6px; font-size:.85rem; background:#fff; min-width:150px; }
+  .ld-table { width:100%; border-collapse:collapse; font-size:.86rem; }
+  .ld-table th { text-align:left; font-size:.66rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#9ca3af; padding:0 10px 10px; border-bottom:1px solid #e5e7eb; white-space:nowrap; }
+  .ld-table td { padding:11px 10px; border-bottom:1px solid #f3f4f6; vertical-align:top; }
+  .ld-table tr:hover td { background:#fafafa; }
+  .ld-name { font-weight:700; color:#111; text-decoration:none; }
+  .ld-name:hover { color:#2d5016; }
+  .ld-sub { font-size:.75rem; color:#9ca3af; margin-top:2px; }
+  .ld-score { display:inline-block; min-width:34px; text-align:center; font-weight:800; font-size:.82rem; padding:3px 6px; border-radius:5px; color:#fff; background:#9ca3af; }
+  .ld-score.hi { background:#2d5016; } .ld-score.mid { background:#c8a14a; } .ld-score.lo { background:#b0b6be; }
+  .ld-chip { display:inline-block; font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:20px; background:#eef2f6; color:#4b5563; white-space:nowrap; }
+  .ld-chip.de { background:#efe7d2; color:#7a5c12; }
+  .ld-status { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#6b7280; }
+  .ld-status.won { color:#2d5016; } .ld-status.dead, .ld-status.passed { color:#b91c1c; }
+  .ld-tel { color:#2d5016; text-decoration:none; font-variant-numeric:tabular-nums; }
+  .ld-log { font-family:monospace; font-size:.74rem; color:#4b5563; background:#f9fafb; border-radius:6px; padding:12px; max-height:200px; overflow:auto; white-space:pre-wrap; }
+  .ld-note { font-size:.78rem; color:#6b7280; padding:10px 14px; background:#f9fafb; border-radius:6px; border-left:3px solid #2d5016; margin-bottom:20px; }
+  @media(max-width:760px){ .ld-hide-sm { display:none; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+
+  <div class="admin-header">
+    <div>
+      <h2 class="admin-title">Buyer Leads</h2>
+      <p class="admin-subtitle">Businesses around New Castle County, DE that can buy or move the parts lot</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <a href="{{ url_for('admin_lot_valuation') }}" class="btn btn-outline-sm">Lot valuation</a>
+      <a href="{{ url_for('admin_leads_export') }}" class="btn btn-outline-sm">Export CSV</a>
+      <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-sm">← Dashboard</a>
+    </div>
+  </div>
+
+  <p class="ld-note">
+    Leads are scored 0–100 on category fit, German-make specialisation, distance from the lot, and whether you can actually reach them.
+    Work the list top-down. Contact details come from public listings — confirm them on the call.
+  </p>
+
+  <div class="ld-grid">
+    <div class="ld-card"><div class="lbl">Total leads</div><div class="val">{{ total }}</div></div>
+    <div class="ld-card"><div class="lbl">Euro specialists</div><div class="val">{{ counts.get('euro_recycler', 0) }}</div></div>
+    <div class="ld-card"><div class="lbl">Salvage yards</div><div class="val">{{ counts.get('salvage_yard', 0) + counts.get('dismantler', 0) }}</div></div>
+    <div class="ld-card"><div class="lbl">Body shops</div><div class="val">{{ counts.get('collision_euro', 0) + counts.get('collision', 0) }}</div></div>
+    <div class="ld-card"><div class="lbl">Contacted</div><div class="val">{{ total - status_counts.get('new', 0) }}</div></div>
+  </div>
+
+  <!-- Scrape control -->
+  <div class="ld-panel">
+    <h3>Find more buyers</h3>
+    <form method="POST" action="{{ url_for('admin_leads_scrape') }}" class="ld-filters">
+      <div>
+        <label>Sources</label>
+        <select name="sources" multiple size="3" style="min-width:170px;">
+          <option value="seed" selected>Hand-verified seed list</option>
+          <option value="overpass" selected>OpenStreetMap (free)</option>
+          <option value="places">Google Places (needs API key)</option>
+        </select>
+      </div>
+      <div>
+        <label>Radius (miles)</label>
+        <input type="number" name="radius" value="100" min="10" max="300" step="10">
+      </div>
+      <div style="padding-bottom:8px;">
+        <label style="display:inline;">
+          <input type="checkbox" name="enrich"> Visit websites for emails (slow)
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary-sm" {{ 'disabled' if scrape.running else '' }}>
+        {{ 'Scrape running…' if scrape.running else 'Run scrape' }}
+      </button>
+    </form>
+    {% if scrape.log %}
+      <div class="ld-log" id="scrape-log">{{ scrape.log[-20:] | join('\n') }}</div>
+    {% endif %}
+  </div>
+
+  <!-- Filters -->
+  <div class="ld-panel">
+    <h3>Filter</h3>
+    <form method="GET" class="ld-filters">
+      <div>
+        <label>Search</label>
+        <input type="text" name="q" value="{{ filters.q }}" placeholder="name, town, keyword">
+      </div>
+      <div>
+        <label>Category</label>
+        <select name="category">
+          <option value="">All categories</option>
+          {% for key, meta in categories.items() %}
+            {% if counts.get(key) %}
+            <option value="{{ key }}" {{ 'selected' if filters.category == key else '' }}>
+              {{ meta.label }} ({{ counts.get(key) }})
+            </option>
+            {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Status</label>
+        <select name="status">
+          <option value="">Any status</option>
+          {% for s in statuses %}
+            <option value="{{ s }}" {{ 'selected' if filters.status == s else '' }}>
+              {{ s }} ({{ status_counts.get(s, 0) }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Distance</label>
+        <select name="band">
+          <option value="">Any distance</option>
+          <option value="local"    {{ 'selected' if filters.band=='local' else '' }}>Local (≤25 mi)</option>
+          <option value="regional" {{ 'selected' if filters.band=='regional' else '' }}>Regional (≤60 mi)</option>
+          <option value="extended" {{ 'selected' if filters.band=='extended' else '' }}>Extended (≤100 mi)</option>
+          <option value="freight"  {{ 'selected' if filters.band=='freight' else '' }}>Freight only</option>
+        </select>
+      </div>
+      <div>
+        <label>Sort</label>
+        <select name="sort">
+          <option value="score"    {{ 'selected' if filters.sort=='score' else '' }}>Priority score</option>
+          <option value="distance" {{ 'selected' if filters.sort=='distance' else '' }}>Distance</option>
+          <option value="name"     {{ 'selected' if filters.sort=='name' else '' }}>Name</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary-sm">Apply</button>
+      <a href="{{ url_for('admin_leads') }}" class="btn btn-outline-sm">Reset</a>
+    </form>
+  </div>
+
+  <!-- Table -->
+  <div class="ld-panel">
+    <h3>{{ leads|length }} lead{{ '' if leads|length == 1 else 's' }}</h3>
+    {% if leads %}
+    <div class="admin-table-wrap">
+      <table class="ld-table">
+        <thead>
+          <tr>
+            <th>Score</th>
+            <th>Business</th>
+            <th class="ld-hide-sm">Category</th>
+            <th>Phone</th>
+            <th class="ld-hide-sm">Miles</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for lead in leads %}
+          <tr>
+            <td>
+              <span class="ld-score {{ 'hi' if lead.score >= 70 else ('mid' if lead.score >= 50 else 'lo') }}">{{ lead.score }}</span>
+            </td>
+            <td>
+              <a class="ld-name" href="{{ url_for('admin_lead_detail', lead_id=lead.id) }}">{{ lead.name }}</a>
+              <div class="ld-sub">
+                {{ lead.city or '—' }}{% if lead.state %}, {{ lead.state }}{% endif %}
+                {% if lead.is_german_specialist %}<span class="ld-chip de">German specialist</span>{% endif %}
+              </div>
+            </td>
+            <td class="ld-hide-sm">
+              <span class="ld-chip">{{ categories.get(lead.category, categories['unknown']).label }}</span>
+            </td>
+            <td>
+              {% if lead.phone %}
+                <a class="ld-tel" href="tel:{{ lead.phone }}">{{ lead.phone_display }}</a>
+              {% elif lead.website %}
+                <a class="ld-tel" href="{{ lead.website }}" target="_blank" rel="noopener noreferrer">website</a>
+              {% else %}—{% endif %}
+            </td>
+            <td class="ld-hide-sm">{{ '%.0f'|format(lead.distance_miles) if lead.distance_miles is not none else '—' }}</td>
+            <td><span class="ld-status {{ lead.status }}">{{ lead.status }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-title">No leads yet</div>
+      <p>Run a scrape above, or from the command line: <code>python -m scraper.cli scrape</code></p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if scrape.running %}
+<script>
+  // Poll while a scrape runs so the log and count update without a manual refresh.
+  (function () {
+    var log = document.getElementById('scrape-log');
+    var timer = setInterval(function () {
+      fetch('{{ url_for("admin_leads_scrape_status") }}')
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (log && data.log) { log.textContent = data.log.join('\n'); log.scrollTop = log.scrollHeight; }
+          if (!data.running) { clearInterval(timer); location.reload(); }
+        })
+        .catch(function () { clearInterval(timer); });
+    }, 3000);
+  })();
+</script>
+{% endif %}
+{% endblock %}

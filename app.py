@@ -8,6 +8,9 @@ import uuid
 import threading
 import requests as http_requests
 from sqlalchemy import text
+from urllib.parse import quote_plus
+import csv
+import io
 
 N8N_BID_WEBHOOK = os.environ.get('N8N_BID_WEBHOOK', 'https://myauction.duckdns.org/webhook/new-bid')
 N8N_PAYMENT_WEBHOOK = os.environ.get('N8N_PAYMENT_WEBHOOK', 'https://myauction.duckdns.org/webhook/auction-payment')
@@ -121,6 +124,63 @@ class PageView(db.Model):
     path = db.Column(db.String(255), nullable=False, index=True)
     ref  = db.Column(db.String(255))          # referrer hostname only
     ts   = db.Column(db.Integer, nullable=False, index=True)  # unix epoch
+
+
+# ── Buyer leads for the parts-lot liquidation ────────────────────────────────
+class Lead(db.Model):
+    """A business that might buy the lot, or help sell it.
+
+    Populated by `python -m scraper.cli scrape`. The scraper owns the sourced
+    fields; `status`, `notes`, `contact_name` and `contacted_at` are yours and
+    are never overwritten by a re-scrape.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False, index=True)
+    category = db.Column(db.String(50), default='unknown', index=True)
+    address = db.Column(db.String(250))
+    city = db.Column(db.String(100), index=True)
+    state = db.Column(db.String(20), index=True)
+    postcode = db.Column(db.String(20))
+    phone = db.Column(db.String(20), index=True)
+    email = db.Column(db.String(200))
+    website = db.Column(db.String(300))
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+    distance_miles = db.Column(db.Float, index=True)
+    distance_band = db.Column(db.String(20))
+    description = db.Column(db.Text)
+    is_german_specialist = db.Column(db.Boolean, default=False)
+    score = db.Column(db.Integer, default=0, index=True)
+    source = db.Column(db.String(80))
+    source_id = db.Column(db.String(120))
+
+    # Outreach state - owned by the human, not the scraper.
+    status = db.Column(db.String(30), default='new', index=True)
+    contact_name = db.Column(db.String(120))
+    notes = db.Column(db.Text)
+    contacted_at = db.Column(db.DateTime)
+    offer_amount = db.Column(db.Float)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_seen_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def phone_display(self):
+        p = self.phone or ''
+        if len(p) == 12 and p.startswith('+1'):
+            return '({}) {}-{}'.format(p[2:5], p[5:8], p[8:12])
+        return p
+
+    @property
+    def maps_url(self):
+        where = ', '.join(x for x in (self.name, self.address, self.city,
+                                      self.state) if x)
+        return 'https://www.google.com/maps/search/?api=1&query=' + \
+               quote_plus(where)
+
+
+LEAD_STATUSES = ['new', 'queued', 'contacted', 'quoted', 'negotiating',
+                 'won', 'passed', 'dead']
 
 
 @login_manager.user_loader
@@ -489,6 +549,221 @@ def admin_toggle_auction(auction_id):
     auction.is_active = not auction.is_active
     db.session.commit()
     return jsonify({'is_active': auction.is_active})
+
+
+# ─── Lead desk (parts-lot liquidation) ────────────────────────────────────────
+
+_scrape_state = {'running': False, 'log': [], 'finished_at': None}
+
+
+def _scrape_log(message):
+    _scrape_state['log'].append(str(message))
+    del _scrape_state['log'][:-400]
+    print(message)
+
+
+def _run_scrape_background(sources, radius, enrich):
+    from scraper import pipeline
+    try:
+        pipeline.run(sources=sources, radius_miles=radius, do_enrich=enrich,
+                     persist=True, log=_scrape_log)
+    except Exception as exc:                              # noqa: BLE001
+        _scrape_log('scrape failed: {}'.format(exc))
+    finally:
+        _scrape_state['running'] = False
+        _scrape_state['finished_at'] = datetime.utcnow()
+
+
+@app.route('/admin/leads')
+@login_required
+@admin_required
+def admin_leads():
+    from scraper import config as scraper_config
+
+    query = Lead.query
+    category = request.args.get('category', '')
+    status = request.args.get('status', '')
+    band = request.args.get('band', '')
+    search = (request.args.get('q') or '').strip()
+
+    if category:
+        query = query.filter(Lead.category == category)
+    if status:
+        query = query.filter(Lead.status == status)
+    if band:
+        query = query.filter(Lead.distance_band == band)
+    if search:
+        like = '%{}%'.format(search)
+        query = query.filter(db.or_(Lead.name.ilike(like),
+                                    Lead.city.ilike(like),
+                                    Lead.description.ilike(like)))
+
+    sort = request.args.get('sort', 'score')
+    order = {
+        'score': Lead.score.desc(),
+        'distance': Lead.distance_miles.asc(),
+        'name': Lead.name.asc(),
+    }.get(sort, Lead.score.desc())
+    leads = query.order_by(order, Lead.name.asc()).all()
+
+    counts = {row[0]: row[1] for row in
+              db.session.query(Lead.category, db.func.count(Lead.id))
+              .group_by(Lead.category).all()}
+    status_counts = {row[0]: row[1] for row in
+                     db.session.query(Lead.status, db.func.count(Lead.id))
+                     .group_by(Lead.status).all()}
+
+    return render_template(
+        'admin/leads.html',
+        leads=leads, counts=counts, status_counts=status_counts,
+        categories=scraper_config.CATEGORIES, statuses=LEAD_STATUSES,
+        total=Lead.query.count(), scrape=_scrape_state,
+        filters={'category': category, 'status': status, 'band': band,
+                 'q': search, 'sort': sort})
+
+
+@app.route('/admin/leads/<int:lead_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_lead_detail(lead_id):
+    import outreach
+    import valuation
+    from scraper import config as scraper_config
+
+    lead = Lead.query.get_or_404(lead_id)
+
+    if request.method == 'POST':
+        previous_status = lead.status
+        lead.status = request.form.get('status', lead.status)
+        lead.contact_name = request.form.get('contact_name') or None
+        lead.notes = request.form.get('notes') or None
+        lead.email = request.form.get('email') or lead.email
+        lead.phone = request.form.get('phone') or lead.phone
+        offer = request.form.get('offer_amount')
+        lead.offer_amount = float(offer) if offer else None
+        if lead.status != 'new' and previous_status == 'new':
+            lead.contacted_at = datetime.utcnow()
+        db.session.commit()
+        flash('Lead updated.', 'success')
+        return redirect(url_for('admin_lead_detail', lead_id=lead.id))
+
+    result = valuation.value_lot()
+    email = outreach.build_email(
+        lead, result,
+        seller_name=current_user.username,
+        seller_email=current_user.email)
+
+    return render_template(
+        'admin/lead_detail.html',
+        lead=lead, statuses=LEAD_STATUSES,
+        category=scraper_config.CATEGORIES.get(lead.category or 'unknown',
+                                               scraper_config.CATEGORIES['unknown']),
+        call_script=outreach.call_script(lead), email=email)
+
+
+@app.route('/admin/leads/export.csv')
+@login_required
+@admin_required
+def admin_leads_export():
+    fields = ['score', 'category', 'name', 'contact_name', 'phone', 'email',
+              'website', 'address', 'city', 'state', 'postcode',
+              'distance_miles', 'distance_band', 'is_german_specialist',
+              'status', 'offer_amount', 'source', 'notes']
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(fields)
+    for lead in Lead.query.order_by(Lead.score.desc()).all():
+        row = [getattr(lead, f, '') for f in fields]
+        row[fields.index('phone')] = lead.phone_display
+        writer.writerow(['' if v is None else v for v in row])
+
+    return app.response_class(
+        buffer.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition':
+                 'attachment; filename=auctiongera-leads-{}.csv'.format(
+                     datetime.utcnow().strftime('%Y%m%d'))})
+
+
+@app.route('/admin/leads/scrape', methods=['POST'])
+@login_required
+@admin_required
+def admin_leads_scrape():
+    if _scrape_state['running']:
+        flash('A scrape is already running.', 'info')
+        return redirect(url_for('admin_leads'))
+
+    sources = request.form.getlist('sources') or ['seed', 'overpass']
+    radius = float(request.form.get('radius') or 100)
+    enrich = request.form.get('enrich') == 'on'
+
+    _scrape_state.update({'running': True, 'log': [], 'finished_at': None})
+    threading.Thread(
+        target=_run_scrape_background,
+        args=(sources, radius, enrich),
+        daemon=True).start()
+
+    flash('Scrape started - refresh in a minute to see new leads.', 'success')
+    return redirect(url_for('admin_leads'))
+
+
+@app.route('/admin/leads/scrape/status')
+@login_required
+@admin_required
+def admin_leads_scrape_status():
+    return jsonify({
+        'running': _scrape_state['running'],
+        'log': _scrape_state['log'][-30:],
+        'total': Lead.query.count(),
+    })
+
+
+@app.route('/admin/lot-valuation')
+@login_required
+@admin_required
+def admin_lot_valuation():
+    import valuation
+
+    def _int(name, default):
+        try:
+            return max(0, int(request.args.get(name, default)))
+        except (TypeError, ValueError):
+            return default
+
+    def _float(name, default):
+        try:
+            return float(request.args.get(name, default))
+        except (TypeError, ValueError):
+            return default
+
+    counts = {'fender': _int('fenders', 50),
+              'hood': _int('hoods', 40),
+              'door': _int('doors', 60)}
+    condition = request.args.get('condition', 'good')
+    demand = request.args.get('demand', 'high_volume')
+    if condition not in valuation.CONDITION_FACTORS:
+        condition = 'good'
+    if demand not in valuation.DEMAND_FACTORS:
+        demand = 'high_volume'
+
+    params = {
+        'counts': counts,
+        'assembly_share': min(1.0, max(0.0, _float('assembly_share', 1.0))),
+        'condition': condition,
+        'demand': demand,
+        'paint_coded': request.args.get('paint_coded') == 'on',
+        'commission_rate': min(0.5, max(0.0, _float('commission', 0.15))),
+        'logistics_cost': max(0.0, _float('logistics', 0)),
+    }
+    result = valuation.value_lot(**params)
+
+    return render_template(
+        'admin/valuation.html',
+        result=result, params=params, counts=counts,
+        conditions=valuation.CONDITION_FACTORS,
+        demands=valuation.DEMAND_FACTORS,
+        reserve=valuation.recommended_reserve(result),
+        opening=valuation.recommended_start(result))
 
 
 # ─── Init DB ──────────────────────────────────────────────────────────────────

@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}Lot Valuation — AuctionGera Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+  .vl-panel { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:22px 24px; margin-bottom:20px; }
+  .vl-panel h3 { font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#9ca3af; margin-bottom:16px; }
+  .vl-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:14px; align-items:end; }
+  .vl-form label { display:block; font-size:.66rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#9ca3af; margin-bottom:5px; }
+  .vl-form input, .vl-form select { width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:6px; font-size:.88rem; background:#fff; }
+  .vl-check { font-size:.8rem; color:#4b5563; }
+  .vl-table { width:100%; border-collapse:collapse; font-size:.88rem; }
+  .vl-table th { text-align:left; font-size:.66rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#9ca3af; padding:0 10px 10px; border-bottom:1px solid #e5e7eb; }
+  .vl-table td { padding:11px 10px; border-bottom:1px solid #f3f4f6; }
+  .vl-table td.num, .vl-table th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .vl-table tfoot td { font-weight:800; color:#111; border-top:2px solid #e5e7eb; border-bottom:none; }
+  .vl-channels { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px; }
+  .vl-ch { border:1px solid #e5e7eb; border-radius:10px; padding:18px 20px; background:#fff; }
+  .vl-ch.best { border-color:#2d5016; box-shadow:0 0 0 1px #2d5016 inset; }
+  .vl-ch .name { font-size:.78rem; font-weight:800; color:#111; margin-bottom:4px; line-height:1.35; }
+  .vl-ch .speed { font-size:.66rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#c8a14a; margin-bottom:12px; }
+  .vl-ch .net { font-size:1.35rem; font-weight:800; color:#2d5016; font-variant-numeric:tabular-nums; line-height:1.2; }
+  .vl-ch .netlbl { font-size:.64rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#9ca3af; margin-top:4px; }
+  .vl-ch .note { font-size:.76rem; color:#6b7280; line-height:1.55; margin-top:12px; }
+  .vl-head { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; margin-bottom:20px; }
+  .vl-stat { background:#0e1628; color:#fff; border-radius:10px; padding:18px 20px; }
+  .vl-stat .lbl { font-size:.64rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#c8a14a; margin-bottom:6px; }
+  .vl-stat .val { font-size:1.5rem; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.15; }
+  .vl-stat .sub { font-size:.7rem; color:#9aa4b8; margin-top:5px; }
+  .vl-note { font-size:.78rem; color:#6b7280; padding:10px 14px; background:#f9fafb; border-radius:6px; border-left:3px solid #2d5016; margin-bottom:20px; line-height:1.6; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+
+  <div class="admin-header">
+    <div>
+      <h2 class="admin-title">Lot Valuation</h2>
+      <p class="admin-subtitle">{{ result.total_panels }} German body panels, 2011–2016 · New Castle County, DE</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <a href="{{ url_for('admin_leads') }}" class="btn btn-outline-sm">Buyer leads</a>
+      <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-sm">← Dashboard</a>
+    </div>
+  </div>
+
+  <p class="vl-note">
+    Base per-panel pricing comes from the appraisal on the lot: bulk wholesale runs 20–30% of individual retail.
+    Change the mix, condition or channel below and every number re-derives. <strong>Doors sold as complete assemblies</strong>
+    — glass, regulator, latch and wiring still in — carry a premium worth thousands on its own, which is why the prep
+    checklist insists you record it.
+  </p>
+
+  <div class="vl-head">
+    <div class="vl-stat">
+      <div class="lbl">Retail, one at a time</div>
+      <div class="val">${{ '{:,.0f}'.format(result.retail_total[0]) }}–${{ '{:,.0f}'.format(result.retail_total[1]) }}</div>
+      <div class="sub">What repair shops pay per panel</div>
+    </div>
+    <div class="vl-stat">
+      <div class="lbl">Wholesale lot value</div>
+      <div class="val">${{ '{:,.0f}'.format(result.wholesale_total[0]) }}–${{ '{:,.0f}'.format(result.wholesale_total[1]) }}</div>
+      <div class="sub">What a buyer pays for all {{ result.total_panels }} at once</div>
+    </div>
+    <div class="vl-stat">
+      <div class="lbl">Suggested opening bid</div>
+      <div class="val">${{ '{:,.0f}'.format(opening) }}</div>
+      <div class="sub">Low enough to draw bidders in</div>
+    </div>
+    <div class="vl-stat">
+      <div class="lbl">Suggested reserve</div>
+      <div class="val">${{ '{:,.0f}'.format(reserve) }}</div>
+      <div class="sub">Below this, take a direct buyout instead</div>
+    </div>
+  </div>
+
+  <!-- Inputs -->
+  <div class="vl-panel">
+    <h3>Adjust the lot</h3>
+    <form method="GET" class="vl-form">
+      <div><label>Fenders</label><input type="number" name="fenders" min="0" value="{{ counts.fender }}"></div>
+      <div><label>Hoods</label><input type="number" name="hoods" min="0" value="{{ counts.hood }}"></div>
+      <div><label>Doors</label><input type="number" name="doors" min="0" value="{{ counts.door }}"></div>
+      <div>
+        <label>Doors as full assemblies</label>
+        <select name="assembly_share">
+          {% for value, text in [(1.0,'All of them'),(0.75,'About three quarters'),(0.5,'About half'),(0.25,'About a quarter'),(0.0,'None — bare shells')] %}
+            <option value="{{ value }}" {{ 'selected' if params.assembly_share == value else '' }}>{{ text }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Condition</label>
+        <select name="condition">
+          {% for key, meta in conditions.items() %}
+            <option value="{{ key }}" {{ 'selected' if params.condition == key else '' }}>{{ key }} — {{ meta[1] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Model demand</label>
+        <select name="demand">
+          {% for key, meta in demands.items() %}
+            <option value="{{ key }}" {{ 'selected' if params.demand == key else '' }}>{{ key }} — {{ meta[1] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div><label>Auction commission</label><input type="number" name="commission" step="0.01" min="0" max="0.5" value="{{ params.commission_rate }}"></div>
+      <div><label>Your logistics cost ($)</label><input type="number" name="logistics" step="50" min="0" value="{{ params.logistics_cost|int }}"></div>
+      <div class="vl-check">
+        <label>Prep</label>
+        <label style="text-transform:none;letter-spacing:0;font-size:.8rem;color:#4b5563;font-weight:400;">
+          <input type="checkbox" name="paint_coded" style="width:auto;" {{ 'checked' if params.paint_coded else '' }}> Sorted by paint code
+        </label>
+      </div>
+      <div><button type="submit" class="btn btn-primary-sm" style="width:100%;">Recalculate</button></div>
+    </form>
+  </div>
+
+  <!-- Line items -->
+  <div class="vl-panel">
+    <h3>Line items</h3>
+    <div class="admin-table-wrap">
+      <table class="vl-table">
+        <thead>
+          <tr>
+            <th>Part type</th>
+            <th class="num">Count</th>
+            <th class="num">Retail each</th>
+            <th class="num">Wholesale each</th>
+            <th class="num">Wholesale total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for line in result.lines %}
+          <tr>
+            <td>{{ line.label }}</td>
+            <td class="num">{{ line.count }}</td>
+            <td class="num">${{ line.retail_unit[0] }}–${{ line.retail_unit[1] }}</td>
+            <td class="num">${{ line.bulk_unit[0] }}–${{ line.bulk_unit[1] }}</td>
+            <td class="num">${{ '{:,.0f}'.format(line.bulk_total[0]) }}–${{ '{:,.0f}'.format(line.bulk_total[1]) }}</td>
+          </tr>
+          {% endfor %}
+          {% if result.assembly_count %}
+          <tr>
+            <td>Full-assembly premium</td>
+            <td class="num">{{ result.assembly_count }}</td>
+            <td class="num">+$200–$300</td>
+            <td class="num">+$50–$80</td>
+            <td class="num">${{ '{:,.0f}'.format(result.assembly_premium[0]) }}–${{ '{:,.0f}'.format(result.assembly_premium[1]) }}</td>
+          </tr>
+          {% endif %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>Totals</td>
+            <td class="num">{{ result.total_panels }}</td>
+            <td class="num">—</td>
+            <td class="num">—</td>
+            <td class="num">${{ '{:,.0f}'.format(result.wholesale_total[0]) }}–${{ '{:,.0f}'.format(result.wholesale_total[1]) }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <p style="font-size:.76rem;color:#9ca3af;margin-top:12px;">
+      Condition and demand multiplier applied: ×{{ result.multiplier }}.
+    </p>
+  </div>
+
+  <!-- Channels -->
+  <div class="vl-panel">
+    <h3>What each exit route actually nets you</h3>
+    <div class="vl-channels">
+      {% for key, channel in result.channels.items() %}
+      <div class="vl-ch {{ 'best' if key == 'bulk_buyout' else '' }}">
+        <div class="name">{{ channel.label }}</div>
+        <div class="speed">{{ channel.speed }}</div>
+        <div class="net">${{ '{:,.0f}'.format(channel.net[0]) }}–${{ '{:,.0f}'.format(channel.net[1]) }}</div>
+        <div class="netlbl">Net to you</div>
+        <p class="note">{{ channel.note }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    <p style="font-size:.76rem;color:#6b7280;margin-top:16px;line-height:1.6;">
+      Piecemeal retail always shows the biggest number and is the reason people sit on inventory for two years.
+      It assumes you store, photograph, list, pack and ship {{ result.total_panels }} fragile panels one at a time.
+      A direct bulk buyout is the same money as an auction without the commission or the wait — which is why the
+      specialist recyclers at the top of the lead list are the first calls to make.
+    </p>
+  </div>
+</div>
+{% endblock %}

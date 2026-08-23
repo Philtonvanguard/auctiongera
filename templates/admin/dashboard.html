@@ -10,7 +10,11 @@
       <h2 class="admin-title">⚙ Admin Dashboard</h2>
       <p class="admin-subtitle">Manage all auctions, users, and bids on AuctionGera.</p>
     </div>
-    <a href="{{ url_for('admin_new_auction') }}" class="btn btn-primary">+ New Auction</a>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <a href="{{ url_for('admin_leads') }}" class="btn btn-outline-sm">Buyer leads</a>
+      <a href="{{ url_for('admin_lot_valuation') }}" class="btn btn-outline-sm">Lot valuation</a>
+      <a href="{{ url_for('admin_new_auction') }}" class="btn btn-primary">+ New Auction</a>
+    </div>
   </div>
 
   <!-- Stats -->

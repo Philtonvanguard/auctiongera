@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}{{ lead.name }} — Lead — AuctionGera Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+  .lx-cols { display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start; }
+  @media(max-width:860px){ .lx-cols { grid-template-columns:1fr; } }
+  .lx-panel { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:22px 24px; margin-bottom:20px; }
+  .lx-panel h3 { font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#9ca3af; margin-bottom:14px; }
+  .lx-kv { display:grid; grid-template-columns:110px 1fr; gap:8px 14px; font-size:.88rem; }
+  .lx-kv dt { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#9ca3af; padding-top:2px; }
+  .lx-kv dd { color:#374151; word-break:break-word; }
+  .lx-kv a { color:#2d5016; }
+  .lx-score { display:inline-block; font-weight:800; font-size:1.6rem; color:#2d5016; }
+  .lx-why { font-size:.82rem; color:#6b7280; line-height:1.55; border-left:3px solid #c8a14a; padding-left:12px; margin-top:12px; }
+  .lx-script { background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:16px; font-size:.9rem; line-height:1.65; color:#374151; }
+  .lx-email { background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:14px; font-family:ui-monospace,Menlo,monospace; font-size:.78rem; line-height:1.55; white-space:pre-wrap; color:#374151; max-height:420px; overflow:auto; }
+  .lx-form label { display:block; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#9ca3af; margin:14px 0 5px; }
+  .lx-form input, .lx-form select, .lx-form textarea {
+    width:100%; padding:9px 11px; border:1px solid #d1d5db; border-radius:6px; font-size:.9rem; font-family:inherit; background:#fff; }
+  .lx-form textarea { min-height:110px; resize:vertical; }
+  .lx-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:18px; }
+  .lx-copy { font-size:.72rem; background:none; border:1px solid #d1d5db; border-radius:5px; padding:4px 10px; cursor:pointer; color:#6b7280; }
+  .lx-copy:hover { border-color:#2d5016; color:#2d5016; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+
+  <div class="admin-header">
+    <div>
+      <h2 class="admin-title">{{ lead.name }}</h2>
+      <p class="admin-subtitle">{{ category.label }}{% if lead.city %} · {{ lead.city }}{% if lead.state %}, {{ lead.state }}{% endif %}{% endif %}</p>
+    </div>
+    <a href="{{ url_for('admin_leads') }}" class="btn btn-outline-sm">← All leads</a>
+  </div>
+
+  <div class="lx-cols">
+    <div>
+      <!-- Who they are -->
+      <div class="lx-panel">
+        <h3>Contact</h3>
+        <dl class="lx-kv">
+          <dt>Priority</dt><dd><span class="lx-score">{{ lead.score }}</span> / 100</dd>
+          <dt>Phone</dt>
+          <dd>{% if lead.phone %}<a href="tel:{{ lead.phone }}">{{ lead.phone_display }}</a>{% else %}<em>not found — look it up before calling</em>{% endif %}</dd>
+          <dt>Email</dt>
+          <dd>{% if lead.email %}<a href="mailto:{{ lead.email }}">{{ lead.email }}</a>{% else %}<em>none</em>{% endif %}</dd>
+          <dt>Website</dt>
+          <dd>{% if lead.website %}<a href="{{ lead.website }}" target="_blank" rel="noopener noreferrer">{{ lead.website }}</a>{% else %}<em>none</em>{% endif %}</dd>
+          <dt>Address</dt>
+          <dd>
+            {{ lead.address or '' }}{% if lead.address and lead.city %}<br>{% endif %}
+            {{ lead.city or '' }}{% if lead.state %}, {{ lead.state }}{% endif %} {{ lead.postcode or '' }}
+            <br><a href="{{ lead.maps_url }}" target="_blank" rel="noopener noreferrer">Open in Maps</a>
+          </dd>
+          <dt>Distance</dt>
+          <dd>{% if lead.distance_miles is not none %}{{ '%.0f'|format(lead.distance_miles) }} mi from the lot ({{ lead.distance_band }}){% else %}unknown{% endif %}</dd>
+          <dt>Source</dt><dd>{{ lead.source or '—' }}</dd>
+        </dl>
+        {% if lead.description %}<p class="lx-why">{{ lead.description }}</p>{% endif %}
+        {% if category.why %}<p class="lx-why"><strong>Why this category matters:</strong> {{ category.why }}</p>{% endif %}
+      </div>
+
+      <!-- Outreach state -->
+      <div class="lx-panel">
+        <h3>Your notes</h3>
+        <form method="POST" class="lx-form">
+          <label>Status</label>
+          <select name="status">
+            {% for s in statuses %}
+              <option value="{{ s }}" {{ 'selected' if lead.status == s else '' }}>{{ s }}</option>
+            {% endfor %}
+          </select>
+
+          <label>Contact person</label>
+          <input type="text" name="contact_name" value="{{ lead.contact_name or '' }}" placeholder="who you actually spoke to">
+
+          <label>Phone</label>
+          <input type="text" name="phone" value="{{ lead.phone_display }}" placeholder="(302) 555-0100">
+
+          <label>Email</label>
+          <input type="email" name="email" value="{{ lead.email or '' }}">
+
+          <label>Their offer ($)</label>
+          <input type="number" name="offer_amount" step="50" value="{{ lead.offer_amount or '' }}" placeholder="what they offered for the lot">
+
+          <label>Notes</label>
+          <textarea name="notes" placeholder="What they said, what they want to see, when to follow up.">{{ lead.notes or '' }}</textarea>
+
+          <div class="lx-actions">
+            <button type="submit" class="btn btn-primary-sm">Save</button>
+            {% if lead.phone %}<a href="tel:{{ lead.phone }}" class="btn btn-outline-sm">Call</a>{% endif %}
+            {% if lead.email %}
+              <a class="btn btn-outline-sm"
+                 href="mailto:{{ lead.email }}?subject={{ email.subject | urlencode }}&body={{ email.body | urlencode }}">Open in mail</a>
+            {% endif %}
+          </div>
+          {% if lead.contacted_at %}
+            <p style="font-size:.75rem;color:#9ca3af;margin-top:12px;">First contacted {{ lead.contacted_at.strftime('%Y-%m-%d %H:%M') }} UTC</p>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+
+    <div>
+      <!-- What to say -->
+      <div class="lx-panel">
+        <h3>Call script</h3>
+        <div class="lx-script" id="call-script">{{ call_script }}</div>
+        <button class="lx-copy" type="button" data-copy="call-script" style="margin-top:10px;">Copy</button>
+      </div>
+
+      <div class="lx-panel">
+        <h3>Email draft — {{ email.template }}</h3>
+        <p style="font-size:.8rem;color:#6b7280;margin-bottom:10px;"><strong>Subject:</strong> {{ email.subject }}</p>
+        <div class="lx-email" id="email-body">{{ email.body }}</div>
+        <button class="lx-copy" type="button" data-copy="email-body" style="margin-top:10px;">Copy body</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.lx-copy').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var source = document.getElementById(button.dataset.copy);
+      if (!source) return;
+      navigator.clipboard.writeText(source.textContent.trim()).then(function () {
+        var original = button.textContent;
+        button.textContent = 'Copied';
+        setTimeout(function () { button.textContent = original; }, 1500);
+      });
+    });
+  });
+</script>
+{% endblock %}
