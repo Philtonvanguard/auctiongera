@@ -546,17 +546,26 @@ def admin_toggle_auction(auction_id):
 def init_db():
     with app.app_context():
         db.create_all()
-        # Bootstrap the admin only when ADMIN_PASSWORD is set (Render > Environment).
-        # No default password: this repo is public.
+        # ADMIN_PASSWORD (Render > Environment) is the source of truth for the
+        # admin login. When set, it creates the admin if missing and resets the
+        # password if it already exists, so a forgotten or leaked password is
+        # fixed by editing one env var and redeploying. No default password:
+        # this repo is public.
+        # Leaving it set means every restart re-applies it, which is the point.
         password = os.environ.get('ADMIN_PASSWORD')
-        if password and not User.query.filter_by(username='admin').first():
-            admin = User(username='admin',
-                         email=os.environ.get('ADMIN_EMAIL', 'admin@auctiongera.com'),
-                         is_admin=True)
+        if password:
+            admin = User.query.filter_by(username='admin').first()
+            if admin is None:
+                admin = User(username='admin',
+                             email=os.environ.get('ADMIN_EMAIL', 'admin@auctiongera.com'),
+                             is_admin=True)
+                db.session.add(admin)
+                print('[OK] Admin user created from ADMIN_PASSWORD')
+            else:
+                print('[OK] Admin password reset from ADMIN_PASSWORD')
+            admin.is_admin = True
             admin.set_password(password)
-            db.session.add(admin)
             db.session.commit()
-            print('[OK] Admin user created from ADMIN_PASSWORD')
 
 
 # Always run init_db so gunicorn (Railway) also creates tables on startup

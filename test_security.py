@@ -40,6 +40,22 @@ def test_admin_created_from_env_password():
 
 
 @check
+def test_admin_password_resets_on_existing_account():
+    """The whole point of the env var: a leaked or forgotten admin password is
+    fixed by editing ADMIN_PASSWORD and redeploying, with no database surgery."""
+    os.environ['ADMIN_PASSWORD'] = 'a completely different passphrase'
+    A.init_db()
+    with A.app.app_context():
+        admin = A.User.query.filter_by(username='admin').first()
+        assert admin.check_password('a completely different passphrase'), \
+            'ADMIN_PASSWORD did not reset the existing admin password'
+        assert not admin.check_password('correct horse battery staple'), \
+            'the old password still works after a reset'
+        assert A.User.query.filter_by(username='admin').count() == 1, \
+            'reset created a duplicate admin instead of updating'
+
+
+@check
 def test_bid_webhook_reports_real_previous_price():
     sent = []
     A.notify_n8n = lambda url, data: sent.append(data)
@@ -109,9 +125,14 @@ def test_analytics_page_renders_for_admin():
             A.db.session.add(A.PageView(path='/', ref=None, ts=now - offset))
         A.db.session.commit()
 
+    # Set the admin password here rather than relying on an earlier test, so
+    # this check does not break when another test changes it.
+    password = 'analytics check password'
+    os.environ['ADMIN_PASSWORD'] = password
+    A.init_db()
+
     client = A.app.test_client()
-    # Created by test_admin_created_from_env_password.
-    client.post('/login', data={'username': 'admin', 'password': 'correct horse battery staple'})
+    client.post('/login', data={'username': 'admin', 'password': password})
     res = client.get('/admin/analytics')
     assert res.status_code == 200, 'analytics returned %s' % res.status_code
     assert b'3' in res.data, 'expected the three seeded days to be counted'

@@ -26,7 +26,7 @@ Environment variables:
 |---|---|
 | `SECRET_KEY` | Already set. Rotate it: `python -c "import secrets; print(secrets.token_hex(32))"` |
 | `DATABASE_URL` | Already set, points at `Auctiongera DB` |
-| `ADMIN_PASSWORD` | Only creates the first admin on an **empty** database. Does not change an existing admin's password. |
+| `ADMIN_PASSWORD` | **Source of truth for the admin login.** Creates the admin if missing, resets the password if it exists. Set it here and redeploy to change the admin password; no database access needed. Leaving it set means every restart re-applies it, which is intended. |
 | `ADMIN_EMAIL` | Optional |
 | `N8N_BID_WEBHOOK` | Bid notification email |
 | `N8N_PAYMENT_WEBHOOK` | Firefly III transaction log |
