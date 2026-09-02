@@ -1,0 +1,48 @@
+# Render Blueprint.
+#
+# Render hosts ONE service: the Flask auction engine (bidding, auth, admin,
+# legal pages). The Next.js marketing front is deployed to Cloudflare Pages
+# instead, which is free and never cold-starts. Cloudflare proxies the paths
+# below back to this service so both halves share one origin.
+#
+# Plan is "starter" on purpose. On "free", Render spins the service down after
+# 15 minutes idle and takes ~1 minute to wake, which loses bidders mid-auction.
+#
+# The name and region match the existing service (srv-d7gpb4reo5us739ia540) so
+# this Blueprint adopts it rather than creating a duplicate.
+#
+# Secrets are declared but NOT set. Fill them in the Render dashboard.
+services:
+  - type: web
+    name: auctiongera
+    runtime: python
+    plan: starter
+    region: virginia
+    rootDir: .
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    healthCheckPath: /api/lots
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      # Already set on the live service. Listed so a rebuild does not lose it.
+      - key: SECRET_KEY
+        sync: false
+      # Points at the existing "Auctiongera DB" (basic_256mb, virginia).
+      - key: DATABASE_URL
+        sync: false
+      # Only creates the first admin on an EMPTY database. Setting this does
+      # not change an existing admin's password.
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: N8N_BID_WEBHOOK
+        sync: false
+      - key: N8N_PAYMENT_WEBHOOK
+        sync: false
+      - key: TAWK_PROPERTY_ID
+        sync: false
+      - key: TAWK_WIDGET_ID
+        sync: false

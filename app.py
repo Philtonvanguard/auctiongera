@@ -6,6 +6,7 @@ from datetime import datetime, timezone, timedelta
 import os
 import uuid
 import threading
+from collections import Counter, namedtuple
 import requests as http_requests
 from sqlalchemy import text
 
@@ -25,7 +26,11 @@ def notify_n8n(url, data):
 app = Flask(__name__)
 
 # Use environment variables in production (Railway sets these automatically)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'auctiongera-secret-2024-secure-key')
+# No hardcoded fallback: this repo is public, so a known key means forgeable sessions.
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or os.urandom(32)
+if not os.environ.get('SECRET_KEY'):
+    print('[WARN] SECRET_KEY unset - using a random key. Logins drop on every restart, '
+          'and break entirely with more than one gunicorn worker. Set SECRET_KEY in Render.')
 
 # Use PostgreSQL on Railway if DATABASE_URL is set, else fall back to local SQLite
 database_url = os.environ.get('DATABASE_URL', 'sqlite:///auctiongera.db')
@@ -187,6 +192,7 @@ def place_bid(auction_id):
         user_id=current_user.id,
         ip_address=request.remote_addr
     )
+    previous_price = auction.current_price
     auction.current_price = bid_amount
     db.session.add(bid)
     db.session.commit()
@@ -200,7 +206,7 @@ def place_bid(auction_id):
         'bidder_email': current_user.email,
         'amount': bid_amount,
         'bid_count': auction.bid_count,
-        'previous_price': auction.current_price - auction.bid_increment,
+        'previous_price': previous_price,
         'end_time': auction.end_time.isoformat(),
     })
 
@@ -357,6 +363,40 @@ def analytics_hit():
     return '', 204
 
 
+# ─── Public JSON feed ─────────────────────────────────────────────────────────
+# Read by the Next.js front end (server-side, so no CORS handling is needed).
+
+def _lot_json(auction):
+    return {
+        'id': auction.id,
+        'title': auction.title,
+        'description': auction.description,
+        'category': auction.shed_type,
+        'dimensions': auction.dimensions,
+        'location': auction.location,
+        'condition': auction.condition,
+        'starting_price': auction.starting_price,
+        'current_price': auction.current_price,
+        'bid_increment': auction.bid_increment,
+        'bid_count': auction.bid_count,
+        'image_url': auction.image_url,
+        'start_time': auction.start_time.isoformat(),
+        'end_time': auction.end_time.isoformat(),
+        'status': auction.status,
+        # Relative on purpose. This feed is served through a proxy on the
+        # public domain, so an absolute Render URL would send visitors off-site.
+        'url': url_for('auction_detail', auction_id=auction.id),
+    }
+
+
+@app.route('/api/lots')
+def api_lots():
+    """All active lots, soonest to close first. Reserve price is deliberately
+    omitted: it is private to the seller."""
+    lots = Auction.query.filter(Auction.is_active == True)        .order_by(Auction.end_time.asc()).all()
+    return jsonify([_lot_json(a) for a in lots])
+
+
 # ─── Admin ────────────────────────────────────────────────────────────────────
 
 def admin_required(f):
@@ -472,7 +512,17 @@ def admin_analytics():
     since_ts = int((datetime.utcnow() - timedelta(days=days)).timestamp())
 
     totals   = db.session.execute(text('SELECT COUNT(*) as hits, COUNT(DISTINCT path) as pages FROM pageview WHERE ts >= :s'), {'s': since_ts}).fetchone()
-    by_day   = db.session.execute(text('SELECT date(ts, \'unixepoch\') as day, COUNT(*) as hits FROM pageview WHERE ts >= :s GROUP BY day ORDER BY day DESC LIMIT :d'), {'s': since_ts, 'd': days}).fetchall()
+    # Day bucketing happens in Python, not SQL. The previous version used
+    # date(ts,'unixepoch'), which is SQLite-only syntax and raised on Postgres,
+    # so this whole page was broken in production.
+    # ponytail: reads every row in the window. Fine at this traffic; push the
+    # grouping back into SQL with a dialect branch if it ever gets slow.
+    rows = db.session.execute(
+        text('SELECT ts FROM pageview WHERE ts >= :s'), {'s': since_ts}).fetchall()
+    counts = Counter(
+        datetime.utcfromtimestamp(r[0]).strftime('%Y-%m-%d') for r in rows)
+    Day = namedtuple('Day', 'day hits')
+    by_day = [Day(d, n) for d, n in sorted(counts.items(), reverse=True)[:days]]
     top_pages= db.session.execute(text('SELECT path, COUNT(*) as hits FROM pageview WHERE ts >= :s GROUP BY path ORDER BY hits DESC LIMIT 15'), {'s': since_ts}).fetchall()
     top_refs = db.session.execute(text('SELECT ref, COUNT(*) as hits FROM pageview WHERE ts >= :s AND ref IS NOT NULL AND ref != \'\' GROUP BY ref ORDER BY hits DESC LIMIT 10'), {'s': since_ts}).fetchall()
 
@@ -496,13 +546,17 @@ def admin_toggle_auction(auction_id):
 def init_db():
     with app.app_context():
         db.create_all()
-        # Create admin user if not exists
-        if not User.query.filter_by(username='admin').first():
-            admin = User(username='admin', email='admin@auctiongera.com', is_admin=True)
-            admin.set_password('admin123')
+        # Bootstrap the admin only when ADMIN_PASSWORD is set (Render > Environment).
+        # No default password: this repo is public.
+        password = os.environ.get('ADMIN_PASSWORD')
+        if password and not User.query.filter_by(username='admin').first():
+            admin = User(username='admin',
+                         email=os.environ.get('ADMIN_EMAIL', 'admin@auctiongera.com'),
+                         is_admin=True)
+            admin.set_password(password)
             db.session.add(admin)
             db.session.commit()
-            print('[OK] Admin user created: admin / admin123')
+            print('[OK] Admin user created from ADMIN_PASSWORD')
 
 
 # Always run init_db so gunicorn (Railway) also creates tables on startup

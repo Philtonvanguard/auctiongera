@@ -1,0 +1,116 @@
+{
+  "name": "AuctionGera - Contact Form",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "auctiongera-contact",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "contact-webhook",
+      "name": "Contact Form Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "auctiongera-contact"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "has-email",
+              "leftValue": "={{ $json.body.email }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            },
+            {
+              "id": "has-message",
+              "leftValue": "={{ $json.body.message }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "guard",
+      "name": "Has Email And Message",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [220, 0],
+      "notes": "The site validates before sending. This is a second check so a malformed direct POST cannot produce an empty email."
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.AUCTIONGERA_FROM_EMAIL }}",
+        "toEmail": "={{ $env.AUCTIONGERA_TO_EMAIL }}",
+        "subject": "=New enquiry from {{ $json.body.name }}",
+        "emailFormat": "text",
+        "text": "=New message from the AuctionGera contact form.\n\nName:  {{ $json.body.name }}\nEmail: {{ $json.body.email }}\nSent:  {{ $json.body.received_at }}\n\n{{ $json.body.message }}\n\n--\nReply directly to this email to reach them.",
+        "options": {
+          "replyTo": "={{ $json.body.email }}"
+        }
+      },
+      "id": "send-email",
+      "name": "Email The Enquiry",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [460, -100],
+      "notes": "Set the SMTP credential in n8n. Reply-To is the sender, so replying from your inbox reaches the buyer."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true }) }}",
+        "options": {}
+      },
+      "id": "ok",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [700, -100]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 400,
+        "responseBody": "={{ JSON.stringify({ ok: false, error: 'Missing email or message' }) }}",
+        "options": {}
+      },
+      "id": "reject",
+      "name": "Respond Rejected",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [460, 120],
+      "notes": "Non-2xx matters: the Cloudflare function treats any non-OK response as a failure and tells the visitor it did not send, rather than faking success."
+    }
+  ],
+  "connections": {
+    "Contact Form Webhook": {
+      "main": [[{ "node": "Has Email And Message", "type": "main", "index": 0 }]]
+    },
+    "Has Email And Message": {
+      "main": [
+        [{ "node": "Email The Enquiry", "type": "main", "index": 0 }],
+        [{ "node": "Respond Rejected", "type": "main", "index": 0 }]
+      ]
+    },
+    "Email The Enquiry": {
+      "main": [[{ "node": "Respond OK", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "meta": {
+    "description": "Receives AuctionGera contact form submissions and emails them. Import into n8n, set the SMTP credential on 'Email The Enquiry', set AUCTIONGERA_FROM_EMAIL and AUCTIONGERA_TO_EMAIL, activate, then copy the production webhook URL into N8N_CONTACT_WEBHOOK in the Cloudflare Pages project."
+  }
+}

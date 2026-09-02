@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+/* Tokens mirror static/css/style.css in the Flask app so the two halves of the
+   site look like one site. Change them in both places or neither. */
+@theme {
+  --color-gold:       #d4af37;
+  --color-gold-dark:  #a07c2e;
+  --color-gold-light: #f0d48a;
+  --color-navy:       #1a2744;
+  --color-navy-light: #243358;
+  --color-ink:        #0b1222;
+  --color-card:       #131d33;
+  --color-card-2:     #1a2742;
+  --color-body:       #eaedf4;
+  --color-muted:      #8f9fba;
+  --color-line:       #22304e;
+  --color-danger:     #e5484d;
+  --color-success:    #3dd68c;
+
+  --font-sans:    var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-playfair), ui-serif, Georgia, serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--color-ink);
+  color: var(--color-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Visible keyboard focus everywhere. WCAG 2.4.7. */
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

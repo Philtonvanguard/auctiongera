@@ -12,3 +12,8 @@ env/
 dist/
 build/
 .DS_Store
+
+# Contains a live n8n bearer token - never commit
+.mcp.json
+node_modules/
+out/
