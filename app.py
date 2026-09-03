@@ -10,18 +10,67 @@ from collections import Counter, namedtuple
 import requests as http_requests
 from sqlalchemy import text
 
-N8N_BID_WEBHOOK = os.environ.get('N8N_BID_WEBHOOK', 'https://myauction.duckdns.org/webhook/new-bid')
-N8N_PAYMENT_WEBHOOK = os.environ.get('N8N_PAYMENT_WEBHOOK', 'https://myauction.duckdns.org/webhook/auction-payment')
+# No default webhook URLs. These used to default to a duckdns host that was
+# decommissioned, so every notification POSTed into the void and the failure was
+# swallowed. Unset now means "do nothing", which is at least honest.
+N8N_BID_WEBHOOK = os.environ.get('N8N_BID_WEBHOOK', '')
+N8N_PAYMENT_WEBHOOK = os.environ.get('N8N_PAYMENT_WEBHOOK', '')
+
+# Bid alerts go straight to Emailit. The only n8n instance is local, so routing
+# mail through it would mean alerts stopped whenever that machine was off.
+EMAILIT_ENDPOINT = 'https://api.emailit.com/v2/emails'
+EMAILIT_API_KEY = os.environ.get('EMAILIT_API_KEY', '')
+# Must be on a domain verified in Emailit. vipelex.com is verified.
+ALERT_FROM_EMAIL = os.environ.get('ALERT_FROM_EMAIL', 'AuctionGera <noreply@vipelex.com>')
+ALERT_TO_EMAIL = os.environ.get('ALERT_TO_EMAIL', '')
+
+
+def _in_background(fn):
+    threading.Thread(target=fn, daemon=True).start()
 
 
 def notify_n8n(url, data):
-    """Send notification to n8n webhook in background (non-blocking)."""
+    """POST to an n8n webhook in the background. No-op when the URL is unset."""
+    if not url:
+        return
+
     def _send():
         try:
             http_requests.post(url, json=data, timeout=5)
-        except Exception:
-            pass
-    threading.Thread(target=_send, daemon=True).start()
+        except Exception as exc:
+            print('[WARN] webhook post failed: %s' % exc)
+    _in_background(_send)
+
+
+def send_alert_email(subject, text, reply_to=None):
+    """Email the operator via Emailit, in the background so a bidder never waits
+    on mail latency. Failures are logged rather than swallowed: a bid alert that
+    vanishes silently is exactly the bug this replaces."""
+    if not (EMAILIT_API_KEY and ALERT_TO_EMAIL):
+        print('[WARN] Emailit not configured (EMAILIT_API_KEY/ALERT_TO_EMAIL); '
+              'alert not sent: %s' % subject)
+        return
+
+    payload = {
+        'from': ALERT_FROM_EMAIL,
+        'to': ALERT_TO_EMAIL,
+        # Strip newlines: the subject carries user-supplied names.
+        'subject': ' '.join(subject.split()),
+        'text': text,
+    }
+    if reply_to:
+        payload['reply_to'] = reply_to
+
+    def _send():
+        try:
+            res = http_requests.post(
+                EMAILIT_ENDPOINT, json=payload, timeout=10,
+                headers={'Authorization': 'Bearer ' + EMAILIT_API_KEY})
+            if res.status_code >= 400:
+                print('[WARN] Emailit returned %s: %s' % (res.status_code, res.text[:200]))
+        except Exception as exc:
+            print('[WARN] Emailit send failed: %s' % exc)
+    _in_background(_send)
 
 app = Flask(__name__)
 
@@ -219,6 +268,19 @@ def place_bid(auction_id):
         'seller': 'AuctionGera',
         'amount': bid_amount,
     })
+
+    send_alert_email(
+        'New bid: ${:,.2f} on {}'.format(bid_amount, auction.title),
+        '\n'.join([
+            '{} bid ${:,.2f} on "{}".'.format(current_user.username, bid_amount, auction.title),
+            '',
+            'Previous price: ${:,.2f}'.format(previous_price),
+            'Total bids:     {}'.format(auction.bid_count),
+            'Closes:         {} UTC'.format(auction.end_time.strftime('%Y-%m-%d %H:%M')),
+            'Bidder email:   {}'.format(current_user.email),
+        ]),
+        reply_to=current_user.email,
+    )
 
     return jsonify({
         'success': True,

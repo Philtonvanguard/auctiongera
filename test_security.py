@@ -85,6 +85,48 @@ def test_bid_webhook_reports_real_previous_price():
 
 
 @check
+def test_bid_sends_an_alert_email_with_real_numbers():
+    """Bid alerts previously POSTed to a decommissioned duckdns host and the
+    failure was swallowed, so nobody knew mail had stopped."""
+    sent = []
+    A.send_alert_email = lambda subject, text, reply_to=None: sent.append(
+        {'subject': subject, 'text': text, 'reply_to': reply_to})
+
+    with A.app.app_context():
+        user = A.User(username='mailer', email='mailer@example.com')
+        user.set_password('pw')
+        now = datetime.utcnow()
+        auction = A.Auction(
+            title='Fender Pair', description='d', shed_type='Body panels',
+            starting_price=300.0, current_price=300.0, bid_increment=25.0,
+            start_time=now - timedelta(hours=1), end_time=now + timedelta(hours=1))
+        A.db.session.add_all([user, auction])
+        A.db.session.commit()
+        auction_id = auction.id
+
+    client = A.app.test_client()
+    client.post('/login', data={'username': 'mailer', 'password': 'pw'})
+    res = client.post('/auction/%d/bid' % auction_id, json={'amount': 500.0})
+    assert res.get_json()['success'], res.get_json()
+
+    assert sent, 'a bid produced no alert email'
+    alert = sent[0]
+    assert '500' in alert['subject'], alert['subject']
+    assert '$300.00' in alert['text'], 'previous price missing from the alert'
+    assert alert['reply_to'] == 'mailer@example.com'
+
+
+@check
+def test_no_dead_webhook_defaults():
+    """A hardcoded default pointing at a dead host is worse than no default:
+    it looks configured and delivers nothing."""
+    source = io.open('app.py', encoding='utf-8').read()
+    code = ' '.join(l for l in source.splitlines()
+                    if not l.lstrip().startswith('#'))
+    assert 'duckdns.org' not in code, 'the decommissioned duckdns default is back'
+
+
+@check
 def test_lots_feed_never_exposes_reserve_price():
     """The reserve is the seller's floor. Leaking it lets bidders stop just under it."""
     with A.app.app_context():
