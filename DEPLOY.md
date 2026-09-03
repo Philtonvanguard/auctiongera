@@ -34,7 +34,34 @@ Environment variables:
 
 ## 2. Cloudflare Pages (the marketing site)
 
-Create a Pages project from the same GitHub repo.
+**Already created and deployed.** Project `auctiongera`, live at
+<https://auctiongera.pages.dev>. `FLASK_ORIGIN` is set. Both custom domains are
+attached and waiting on DNS.
+
+Deployed by direct upload from a local build:
+
+```bash
+cd web
+AUCTION_API_URL=https://auctiongera.onrender.com SITE_URL=https://auctiongera.bid npm run build
+wrangler pages deploy out --project-name auctiongera --branch main
+```
+
+`functions/` is picked up automatically because it sits next to the build, so
+the Flask proxy and the contact endpoint ship with every deploy.
+
+### Outstanding: two DNS records
+
+The Pages custom domains sit at `pending` until these exist. Cloudflare
+dashboard > auctiongera.bid > DNS > Records:
+
+| Type | Name | Target | Proxy |
+|---|---|---|---|
+| CNAME | `auctiongera.bid` (or `@`) | `auctiongera.pages.dev` | Proxied |
+| CNAME | `www` | `auctiongera.pages.dev` | Proxied |
+
+Certificates issue within a few minutes of the records appearing.
+
+### If you prefer GitHub-connected builds later
 
 | Setting | Value |
 |---|---|
