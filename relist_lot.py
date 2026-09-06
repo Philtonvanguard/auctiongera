@@ -72,9 +72,44 @@ EXTRA_IMAGES = '\n'.join([
 ])
 
 
+def resolve_url(url_file):
+    """Get the connection string without it landing in shell history.
+
+    Order: a file, then a hidden prompt, then a visible one. The visible
+    fallback exists because classic cmd.exe frequently ignores Ctrl+V at a
+    getpass prompt, so the paste never arrives and Enter submits an empty
+    string, which looks exactly like the script ignoring you.
+    """
+    if url_file:
+        with open(url_file, encoding='utf-8') as handle:
+            for line in handle:
+                if line.strip():
+                    return line.strip()
+        sys.exit('%s is empty. Nothing changed.' % url_file)
+
+    url = getpass.getpass('Render DATABASE_URL (hidden, nothing will appear): ').strip()
+    if url:
+        return url
+
+    print('\nNothing arrived. In cmd.exe try right-click to paste rather than')
+    print('Ctrl+V, or press Enter again to type it where you can see it.')
+    if input('Show the text as you paste it? [y/N]: ').strip().lower() != 'y':
+        sys.exit('No connection string given. Nothing changed.')
+
+    url = input('Render DATABASE_URL (visible): ').strip()
+    if not url:
+        sys.exit('No connection string given. Nothing changed.')
+    print('\nThat string is now in this window\'s scrollback. Close the window '
+          'when you are done.')
+    return url
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--id', type=int, default=1, help='lot id (default: 1)')
+    p.add_argument('--url-file', metavar='PATH',
+                   help='read the connection string from this file instead of '
+                        'prompting, then delete the file')
     p.add_argument('--closes', default=CLOSES_DEFAULT,
                    help='close time, ISO 8601 UTC (default: %s)' % CLOSES_DEFAULT)
     p.add_argument('--yes', action='store_true', help='skip the confirmation')
@@ -86,10 +121,7 @@ def main():
         sys.exit('--closes is in the past. Nothing changed.')
 
     if not os.environ.get('DATABASE_URL'):
-        url = getpass.getpass('Render DATABASE_URL (hidden, not echoed): ').strip()
-        if not url:
-            sys.exit('No connection string given. Nothing changed.')
-        os.environ['DATABASE_URL'] = url
+        os.environ['DATABASE_URL'] = resolve_url(args.url_file)
 
     import app as A  # imported late: app.py reads DATABASE_URL at import time
 
