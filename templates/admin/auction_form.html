@@ -32,9 +32,15 @@
                migration on the live table for a cosmetic gain, so the label
                was changed and the column left alone. #}
             <select name="shed_type" class="form-control" required>
-              {% set types = ['Body panels', 'Seats and interior', 'Wheels and tyres',
-                              'Glass and lighting', 'Engine and drivetrain', 'Trim and badges',
-                              'Powersports', 'Mixed hardware', 'Complete contents', 'Other'] %}
+              {% set base = ['Body panels', 'Seats and interior', 'Wheels and tyres',
+                             'Glass and lighting', 'Engine and drivetrain', 'Trim and badges',
+                             'Powersports', 'Mixed hardware', 'Complete contents', 'Other'] %}
+              {# A lot saved under an older category (the shed-era values, say)
+                 must keep it. Without this the select matches nothing, the
+                 browser shows the first option, and saving silently rewrites
+                 the category to something the owner never chose. #}
+              {% set current = auction.shed_type if auction and auction.shed_type else None %}
+              {% set types = base if not current or current in base else [current] + base %}
               {% for t in types %}
                 <option value="{{ t }}" {% if auction and auction.shed_type == t %}selected{% endif %}>{{ t }}</option>
               {% endfor %}

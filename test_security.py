@@ -311,6 +311,35 @@ def test_missing_column_migration_is_idempotent_and_real():
         A._add_missing_columns()
 
 
+@check
+def test_admin_form_keeps_a_category_not_in_the_dropdown():
+    """A lot saved under an older category must stay selected when edited.
+
+    The category list was rewritten from shed types to parts types. Any lot
+    still on an old value would match no option, so the browser would display
+    the first one and saving would rewrite the category to something the owner
+    never picked. Silent, and only visible later as wrong data.
+    """
+    password = 'category dropdown check'
+    os.environ['ADMIN_PASSWORD'] = password
+    A.init_db()
+
+    with A.app.app_context():
+        lot = _lot(title='Legacy category lot', shed_type='Barn')
+        A.db.session.add(lot)
+        A.db.session.commit()
+        lot_id = lot.id
+
+    client = A.app.test_client()
+    client.post('/login', data={'username': 'admin', 'password': password})
+    html = client.get('/admin/auction/%d/edit' % lot_id).data.decode()
+
+    select = html.split('name="shed_type"', 1)[1].split('</select>', 1)[0]
+    assert '<option value="Barn"' in select, 'the lot\'s own category vanished'
+    assert 'value="Barn" selected' in select.replace('  ', ' '), \
+        'category present but not selected, so saving would silently change it'
+
+
 if __name__ == '__main__':
     for fn in CHECKS:
         fn()
