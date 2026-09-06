@@ -10,6 +10,10 @@ const BADGE: Record<Lot["status"], { label: string; className: string }> = {
 export default function LotCard({ lot }: { lot: Lot }) {
   const badge = BADGE[lot.status] ?? BADGE.ended;
   const priceLabel = lot.bid_count > 0 ? "Current bid" : "Opening bid";
+  // Falls back to image_url so a feed cached from before the gallery shipped
+  // still renders a cover instead of the empty state.
+  const photos = lot.images?.length ? lot.images : lot.image_url ? [lot.image_url] : [];
+  const cover = photos[0];
 
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-card transition-colors hover:border-gold/40">
@@ -17,10 +21,10 @@ export default function LotCard({ lot }: { lot: Lot }) {
           field, so allowing any remote host through the optimizer would let it
           fetch arbitrary URLs server-side. Swap to next/image once images move
           to one known host. */}
-      <div className="aspect-[4/3] overflow-hidden bg-card-2">
-        {lot.image_url ? (
+      <div className="relative aspect-[4/3] overflow-hidden bg-card-2">
+        {cover ? (
           <img
-            src={lot.image_url}
+            src={cover}
             alt={lot.title}
             loading="lazy"
             decoding="async"
@@ -30,6 +34,13 @@ export default function LotCard({ lot }: { lot: Lot }) {
           <div className="flex h-full items-center justify-center text-sm text-muted">
             No photo yet
           </div>
+        )}
+        {photos.length > 1 && (
+          // Tells buyers there is more to see before they click. A lot with one
+          // photo looks thinner than the same lot with six.
+          <span className="absolute bottom-2 right-2 rounded-full bg-ink/80 px-2.5 py-1 text-xs font-medium backdrop-blur">
+            {photos.length} photos
+          </span>
         )}
       </div>
 

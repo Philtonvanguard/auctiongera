@@ -3,6 +3,7 @@
 import { byStatus, type Lot } from "@/lib/lots";
 import { useLiveLots } from "@/lib/useLiveLots";
 import LotCard from "@/components/LotCard";
+import Reveal from "@/components/Reveal";
 
 const SECTIONS = [
   { key: "live", heading: "Open for bidding", blurb: "Bidding is live. Highest bid at close wins." },
@@ -15,26 +16,30 @@ export default function LotsView({ initial }: { initial: Lot[] }) {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-16">
-      <h1 className="font-display text-4xl">Current lots</h1>
-      <p className="mt-3 max-w-2xl text-muted">
-        Parts come out of the barn in batches, so this list changes. Bidding, account
-        sign-in, and lot detail all live on the auction pages linked from each card.
-      </p>
+      <Reveal>
+        <h1 className="font-display text-4xl">Current lots</h1>
+        <p className="mt-3 max-w-2xl text-muted">
+          Parts come out of the barn in batches, so this list changes. Bidding, account
+          sign-in, and lot detail all live on the auction pages linked from each card.
+        </p>
+      </Reveal>
 
       {lots.length === 0 && (
-        <div className="mt-12 rounded-2xl border border-dashed border-line p-12 text-center">
-          <p className="font-display text-xl">No lots to show right now</p>
-          <p className="mx-auto mt-2 max-w-md text-muted">
-            Nothing is listed at the moment. Create an account to be notified when the
-            next batch comes out of the barn.
-          </p>
-          <a
-            href="/register"
-            className="mt-6 inline-block rounded-lg bg-gold px-6 py-3 font-semibold text-ink hover:bg-gold-light"
-          >
-            Create a free account
-          </a>
-        </div>
+        <Reveal>
+          <div className="mt-12 rounded-2xl border border-dashed border-line p-12 text-center">
+            <p className="font-display text-xl">No lots to show right now</p>
+            <p className="mx-auto mt-2 max-w-md text-muted">
+              Nothing is listed at the moment. Create an account to be notified when the
+              next batch comes out of the barn.
+            </p>
+            <a
+              href="/register"
+              className="press mt-6 inline-block rounded-lg bg-gold px-6 py-3 font-semibold text-ink hover:bg-gold-light"
+            >
+              Create a free account
+            </a>
+          </div>
+        </Reveal>
       )}
 
       {SECTIONS.map(({ key, heading, blurb }) => {
@@ -42,13 +47,19 @@ export default function LotsView({ initial }: { initial: Lot[] }) {
         if (group.length === 0) return null;
         return (
           <section key={key} className="mt-14" aria-labelledby={`${key}-heading`}>
-            <h2 id={`${key}-heading`} className="font-display text-2xl">
-              {heading} <span className="text-muted">({group.length})</span>
-            </h2>
-            <p className="mt-1 text-sm text-muted">{blurb}</p>
+            <Reveal>
+              <h2 id={`${key}-heading`} className="font-display text-2xl">
+                {heading} <span className="text-muted">({group.length})</span>
+              </h2>
+              <p className="mt-1 text-sm text-muted">{blurb}</p>
+            </Reveal>
             <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {group.map((lot) => (
-                <li key={lot.id}><LotCard lot={lot} /></li>
+              {group.map((lot, i) => (
+                // Stagger caps at the third card, as on the home page: past
+                // that the tail of a long grid visibly lags the scroll.
+                <Reveal as="li" key={lot.id} delay={Math.min(i, 2) * 90} className="lift">
+                  <LotCard lot={lot} />
+                </Reveal>
               ))}
             </ul>
           </section>

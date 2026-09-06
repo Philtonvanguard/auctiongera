@@ -43,3 +43,85 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* ── Scroll reveals ────────────────────────────────────────────────────────
+   The hidden state is server-rendered rather than switched on by a script.
+   An earlier version added a `.js` class to <html> from an inline script,
+   which changed an attribute React had already rendered: that is a hydration
+   mismatch, and React responded by abandoning hydration for part of the tree,
+   so some Reveal effects never ran and their content stayed invisible.
+   No-JS is handled by a <noscript> override in layout.tsx instead.
+   The whole block sits behind no-preference, so reduced motion never hides
+   anything it then declines to animate. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 620ms cubic-bezier(.22,.61,.36,1),
+                transform 620ms cubic-bezier(.22,.61,.36,1);
+  }
+  [data-reveal].is-visible {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── Hero video ────────────────────────────────────────────────────────────
+   The video is decoration behind live text, so it is aria-hidden in markup
+   and always sits under a scrim. Gold on bare footage fails contrast. */
+.hero-media {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.hero-media video,
+.hero-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* Two layers: a vertical fade so the headline always has a dark bed, and a
+   flat wash so mid-tones in the footage cannot lift the body copy off-contrast. */
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  /* Tuned against the actual footage, which is already near-black down the
+     left third. The earlier, heavier scrim was doubling up on shadow that was
+     already there and flattening the wheels and seat on the right. The bottom
+     stop stays solid so the section reads into the page rather than cutting. */
+  background:
+    linear-gradient(to bottom, rgba(11,18,34,.30) 0%, rgba(11,18,34,.55) 58%, var(--color-ink) 100%),
+    linear-gradient(to right, rgba(11,18,34,.72) 0%, rgba(11,18,34,.10) 62%);
+}
+
+/* ── Micro-interactions ────────────────────────────────────────────────────
+   Transforms and opacity only. Animating box-shadow or border-color forces
+   paint on every frame, which is what makes hover effects stutter on a
+   long grid of cards. */
+.lift {
+  transition: transform 260ms cubic-bezier(.22,.61,.36,1);
+  will-change: transform;
+}
+.lift:hover { transform: translateY(-4px); }
+
+.press { transition: transform 140ms ease; }
+.press:active { transform: scale(.97); }
+
+/* Nav underline that grows from the left rather than fading in. */
+.underline-grow {
+  position: relative;
+}
+.underline-grow::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  height: 1px;
+  width: 100%;
+  background: var(--color-gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 240ms cubic-bezier(.22,.61,.36,1);
+}
+.underline-grow:hover::after,
+.underline-grow:focus-visible::after { transform: scaleX(1); }

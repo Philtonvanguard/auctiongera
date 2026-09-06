@@ -19,15 +19,51 @@
       <span style="color:var(--text);">{{ auction.title }}</span>
     </div>
 
-    <!-- Image -->
+    <!-- Gallery. Thumbnails only appear for a lot with more than one photo. -->
+    {% set photos = auction.images %}
     <div class="detail-image">
-      {% if auction.image_url %}
-        <img src="{{ auction.image_url }}" alt="{{ auction.title }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="detail-image-placeholder" style="display:none;"><svg class="icon icon-xl"><use href="#i-shed"/></svg></div>
+      {% if photos %}
+        <img id="galleryMain" src="{{ photos[0] }}" alt="{{ auction.title }}"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="detail-image-placeholder" style="display:none;"><svg class="icon icon-xl"><use href="#i-mark"/></svg></div>
       {% else %}
-        <div class="detail-image-placeholder"><svg class="icon icon-xl"><use href="#i-shed"/></svg></div>
+        <div class="detail-image-placeholder"><svg class="icon icon-xl"><use href="#i-mark"/></svg></div>
       {% endif %}
     </div>
+
+    {% if photos|length > 1 %}
+      <ul class="gallery-thumbs" id="galleryThumbs">
+        {% for photo in photos %}
+          <li>
+            <button type="button" class="gallery-thumb{% if loop.first %} is-active{% endif %}"
+                    data-src="{{ photo }}"
+                    aria-label="Show photo {{ loop.index }} of {{ photos|length }}"
+                    {% if loop.first %}aria-current="true"{% endif %}>
+              <img src="{{ photo }}" alt="" loading="lazy" decoding="async">
+            </button>
+          </li>
+        {% endfor %}
+      </ul>
+      <script>
+      /* Swaps the main image. Buttons rather than links so keyboard and screen
+         reader users get the same control, and the thumbnails are already real
+         <img> tags so the gallery still communicates without JS. */
+      (function () {
+        var main = document.getElementById('galleryMain');
+        document.getElementById('galleryThumbs').addEventListener('click', function (e) {
+          var btn = e.target.closest('.gallery-thumb');
+          if (!btn || !main) return;
+          main.style.display = '';
+          main.src = btn.dataset.src;
+          this.querySelectorAll('.gallery-thumb').forEach(function (b) {
+            b.classList.toggle('is-active', b === btn);
+            if (b === btn) { b.setAttribute('aria-current', 'true'); }
+            else { b.removeAttribute('aria-current'); }
+          });
+        });
+      })();
+      </script>
+    {% endif %}
 
     <!-- Title & Status -->
     <h1 class="detail-title">{{ auction.title }}</h1>
@@ -49,7 +85,7 @@
     <!-- Specs -->
     <div class="detail-specs">
       <div class="spec-item">
-        <div class="spec-label">Shed Type</div>
+        <div class="spec-label">Lot type</div>
         <div class="spec-value">{{ auction.shed_type }}</div>
       </div>
       {% if auction.dimensions %}

@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}AuctionGera — Shed &amp; Structure Auctions{% endblock %}</title>
-  <meta name="description" content="Bid on quality sheds, workshops, and garden structures. Live auctions with transparent bidding, verified listings, and no hidden fees.">
+  <title>{% block title %}AuctionGera | Barn-Find Car Parts at Auction{% endblock %}</title>
+  <meta name="description" content="A barn of stored car parts, sold lot by lot at open auction. Inspect in person, bid online, pay cash on pickup.">
   <meta property="og:site_name" content="AuctionGera">
-  <meta property="og:title" content="AuctionGera — Shed &amp; Structure Auctions">
-  <meta property="og:description" content="Live auctions for quality sheds, workshops, and garden structures.">
+  <meta property="og:title" content="AuctionGera | Barn-Find Car Parts at Auction">
+  <meta property="og:description" content="A barn of stored car parts, sold lot by lot at open auction. Inspect in person, bid online, pay cash on pickup.">
   <meta property="og:type" content="website">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%230e1628'/%3E%3Cpath d='M24 9 8 22h4v15h24V22h4L24 9z' fill='%23c8a14a'/%3E%3Crect x='20' y='27' width='8' height='10' rx='1' fill='%230e1628'/%3E%3C/svg%3E">
+  <meta property="og:image" content="/static/images/lot-barn-loft.jpg">
+  <!-- Gold diamond, matching the wordmark on the marketing site. The old mark
+       was a shed, left over from what this platform used to sell. -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%230e1628'/%3E%3Cpath d='M24 10 38 24 24 38 10 24z' fill='%23c8a14a'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -20,7 +23,7 @@
 <!-- ── SVG Icon Sprite ── -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <symbol id="i-shed" viewBox="0 0 24 24"><path d="M12 3 2 11h2.5v9h15v-9H22L12 3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><rect x="9.5" y="13.5" width="5" height="6.5" rx=".5" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-mark" viewBox="0 0 24 24"><path d="M12 2.5 21.5 12 12 21.5 2.5 12z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
     <symbol id="i-gavel" viewBox="0 0 24 24"><path d="m13.5 6.5 4 4M6.5 13.5l4 4M9 11l6-6 3 3-6 6-3-3zM3 21h9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
     <symbol id="i-ruler" viewBox="0 0 24 24"><rect x="2.5" y="9" width="19" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 9v3m5-3v3m5-3v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
@@ -43,7 +46,7 @@
 <nav class="navbar" id="navbar">
   <div class="nav-container">
     <a href="{{ url_for('index') }}" class="nav-logo">
-      <span class="logo-mark"><svg class="icon icon-lg"><use href="#i-shed"/></svg></span>
+      <span class="logo-mark"><svg class="icon icon-lg"><use href="#i-mark"/></svg></span>
       <span class="logo-text">Auction<strong>Gera</strong></span>
     </a>
 
@@ -87,10 +90,10 @@
     <div class="footer-grid">
       <div class="footer-brand">
         <div class="footer-logo">
-          <span class="logo-mark"><svg class="icon icon-lg"><use href="#i-shed"/></svg></span>
+          <span class="logo-mark"><svg class="icon icon-lg"><use href="#i-mark"/></svg></span>
           <span class="logo-text">Auction<strong>Gera</strong></span>
         </div>
-        <p>The trusted auction platform for quality sheds, workshops, and garden structures. Transparent bidding, verified listings, no hidden fees.</p>
+        <p>One barn, decades of stored car parts, sold lot by lot. Inspect in person, bid online, pay cash on pickup. No buyer fees.</p>
       </div>
       <div class="footer-col">
         <div class="footer-col-title">Platform</div>
@@ -153,19 +156,15 @@
 </script>
 
 {% if config.TAWK_PROPERTY_ID and config.TAWK_WIDGET_ID %}
-<!--Start of Tawk.to Script — AuctionGera (enable via TAWK_PROPERTY_ID + TAWK_WIDGET_ID env vars)-->
+<!-- Tawk.to chat (enable via TAWK_PROPERTY_ID + TAWK_WIDGET_ID env vars).
+     The embed script is deliberately NOT loaded here. static/js/consent.js
+     injects it only after the visitor opts in, and never when the browser
+     sends Global Privacy Control. Tawk is the only third party on this site
+     that sets cookies, and the onLoad handler below hands it the signed-in
+     user's name and email, so loading it unasked would ship PII offsite. -->
 <script type="text/javascript">
+window.__AG_CHAT = { p: '{{ config.TAWK_PROPERTY_ID }}', w: '{{ config.TAWK_WIDGET_ID }}' };
 var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-(function(){
-var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-s1.async=true;
-s1.src='https://embed.tawk.to/{{ config.TAWK_PROPERTY_ID }}/{{ config.TAWK_WIDGET_ID }}';
-s1.charset='UTF-8';
-s1.setAttribute('crossorigin','*');
-s0.parentNode.insertBefore(s1,s0);
-})();
-</script>
-<script type="text/javascript">
 Tawk_API.onLoad = function(){
   Tawk_API.setAttributes({
     'property': 'auctiongera.vipelex.com',
@@ -179,7 +178,10 @@ Tawk_API.onLoad = function(){
   {% endif %}
 };
 </script>
-<!--End of Tawk.to Script — AuctionGera-->
 {% endif %}
+
+<!-- Consent gate for third-party chat, plus Global Privacy Control handling.
+     Loads on every page: it no-ops when chat is not configured. -->
+<script src="{{ url_for('static', filename='js/consent.js') }}" defer></script>
 </body>
 </html>

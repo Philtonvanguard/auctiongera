@@ -26,10 +26,10 @@
   <a href="{{ url_for('index') }}" class="legal-back">← Back to auctions</a>
   <span class="legal-eyebrow">Legal</span>
   <h1>Privacy <em>Policy</em></h1>
-  <p class="legal-updated">Last updated: April 28, 2026</p>
+  <p class="legal-updated">Last updated: September 5, 2026</p>
 
   <div class="legal-callout">
-    <strong>Plain-English summary:</strong> We collect what you give us at signup (username, email, password) and what you do on the site (bids placed, items won/listed). We use it to run auctions, send required notices, and — only with your opt-in — marketing. We don't sell your data. Request deletion any time.
+    <strong>Plain-English summary:</strong> We collect what you give us at signup (username, email, password) and what you do on the site (bids placed, items won or listed). We use it to run auctions and send required notices. Marketing only goes out if you opt in. We do not sell your data, we honor Global Privacy Control, and you can request deletion at any time.
   </div>
 
   <h2>1. Who We Are</h2>
@@ -69,16 +69,19 @@
   <h2>5. Who We Share Information With</h2>
   <p>We use a small number of trusted processors. We do <strong>not</strong> sell your data.</p>
   <ul>
-    <li><strong>Hosting providers</strong> (Render, Railway, or equivalent) — site hosting and database</li>
-    <li><strong>Payment processors</strong> — to handle transactions</li>
-    <li><strong>n8n / webhook services</strong> — for internal automation of bid and payment events</li>
-    <li><strong>Email providers</strong> — to send transactional and (opt-in only) marketing emails</li>
-    <li><strong>Authorities</strong> — only when legally required</li>
-    <li><strong>Counterparty</strong> — limited info (username, win confirmation, pickup coordination) shared between buyer and seller after a successful auction close</li>
+    <li><strong>Hosting providers</strong> (Render for the auction engine and database, Cloudflare for the public site) — site hosting and delivery</li>
+    <li><strong>Tawk.to</strong>:live chat, loaded only if you turn it on. See section 6.</li>
+    <li><strong>Payment processors</strong>:to handle transactions</li>
+    <li><strong>n8n / webhook services</strong>:for internal automation of bid and payment events</li>
+    <li><strong>Email providers</strong>:to send transactional and (opt-in only) marketing emails</li>
+    <li><strong>Authorities</strong>:only when legally required</li>
+    <li><strong>Counterparty</strong>:limited info (username, win confirmation, pickup coordination) shared between buyer and seller after a successful auction close</li>
   </ul>
 
-  <h2>6. Cookies and Sessions</h2>
-  <p>We use session cookies to keep you logged in, plus standard hosting/security cookies. We do not run cross-site advertising trackers.</p>
+  <h2>6. Cookies, Analytics and Chat</h2>
+  <p>We use a session cookie to keep you logged in, plus standard hosting and security cookies. These are strictly necessary and cannot be switched off without breaking sign-in.</p>
+  <p>Our analytics are first-party and deliberately thin. We record the page path and the hostname that referred you. We do not store IP addresses, we set no analytics cookie, and there is no cross-site advertising tracker anywhere on this site. Nothing here builds a profile of you, so there is no banner asking you to accept it.</p>
+  <p><strong>Live chat is the one exception.</strong> Our chat widget is operated by Tawk.to, which sets its own cookies and, if you are signed in, receives your username and email so an agent knows who they are talking to. It stays switched off until you turn it on. Your choice is stored in your own browser and is never sent to us. Clear your site data to be asked again.</p>
 
   <h2>7. How Long We Keep Data</h2>
   <ul>
@@ -101,8 +104,12 @@
   </ul>
   <p>Email <a href="mailto:contact@vipelex.com">contact@vipelex.com</a> or use our <a href="{{ url_for('opt_out') }}">Opt-Out page</a>.</p>
 
-  <h2>9. California Residents (CCPA/CPRA)</h2>
-  <p>California residents have the right to know what categories of personal information we collect, the right to delete, the right to opt out of "sale" or "sharing" (we do not sell or share for cross-context behavioral advertising), and the right not to be discriminated against for exercising these rights.</p>
+  <h2>9. State Privacy Rights (California, Colorado, Connecticut and similar)</h2>
+  <p>Residents of California (CCPA/CPRA), Colorado (CPA), Connecticut (CTDPA), Virginia (VCDPA) and other states with comparable statutes have the right to know what categories of personal information we collect, the right to delete it, the right to correct it, the right to opt out of "sale" or "sharing" for cross-context behavioral advertising, and the right not to be treated worse for exercising any of these.</p>
+  <p>We do not sell your personal information and we do not share it for cross-context behavioral advertising. We never have.</p>
+
+  <p><strong>Global Privacy Control.</strong> If your browser or extension sends a GPC signal, we treat it as a valid opt-out on arrival. In practice that means third-party chat never loads for you and we never ask you to accept it. You do not need to fill in a form, send an email, or create an account for this to take effect, and we do not log the fact that you sent the signal.</p>
+  <p>To exercise any other right, use the <a href="{{ url_for('opt_out') }}">Opt-Out and Data Requests page</a>. You get a reference number as soon as your request is stored. We reply within 30 days, and usually inside 72 hours.</p>
 
   <h2>10. Children</h2>
   <p>AuctionGera is for adults 18+. We do not knowingly collect data from children. If you believe a child has registered, contact us and we will delete the account.</p>
@@ -117,7 +124,7 @@
   <p>Privacy questions or rights requests: <a href="mailto:contact@vipelex.com">contact@vipelex.com</a>.</p>
 
   <div class="legal-callout" style="margin-top:40px">
-    <strong>This document is operational boilerplate, not legal advice.</strong> Have it reviewed by a licensed attorney — auction platforms have particular consumer-protection and sales-tax exposure.
+    <strong>This document is operational boilerplate, not legal advice.</strong> Have it reviewed by a licensed attorney. Auction platforms carry particular consumer protection and sales tax exposure.
   </div>
 </div>
 {% endblock %}

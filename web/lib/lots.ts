@@ -13,6 +13,9 @@ export type Lot = {
   bid_increment: number;
   bid_count: number;
   image_url: string;
+  /** Cover first, then the rest. Optional: a cached feed from before the
+   *  gallery shipped will not carry it, so read it defensively. */
+  images?: string[];
   start_time: string;
   end_time: string;
   status: LotStatus;

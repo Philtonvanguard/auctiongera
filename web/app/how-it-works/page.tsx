@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Reveal from "@/components/Reveal";
 
 export const metadata = {
   title: "How It Works",
@@ -36,11 +37,13 @@ const FAQ = [
 export default function HowItWorksPage() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-16">
-      <h1 className="font-display text-4xl">How it works</h1>
-      <p className="mt-3 text-lg text-muted">
-        Online bidding, in-person collection, cash on pickup. No buyer premium and no
-        hidden fees.
-      </p>
+      <Reveal>
+        <h1 className="font-display text-4xl">How it works</h1>
+        <p className="mt-3 text-lg text-muted">
+          Online bidding, in-person collection, cash on pickup. No buyer premium and no
+          hidden fees.
+        </p>
+      </Reveal>
 
       <ol className="mt-12 space-y-10">
         {[
@@ -70,31 +73,35 @@ export default function HowItWorksPage() {
             body: <>Come to the barn in the agreed window with cash and a way to carry the lot. Payment happens at handover, not before.</>,
           },
         ].map((step) => (
-          <li key={step.n} className="flex gap-5">
+          <Reveal as="li" key={step.n} className="flex gap-5">
             <span className="font-display text-3xl text-gold/40">{step.n}</span>
             <div>
               <h2 className="font-display text-xl">{step.title}</h2>
               <p className="mt-1.5 text-muted">{step.body}</p>
             </div>
-          </li>
+          </Reveal>
         ))}
       </ol>
 
       <div className="mt-14 rounded-2xl border border-dashed border-gold/40 bg-gold/5 p-5 text-sm">
-        <strong className="text-gold">Details needed from you.</strong> Collection address
-        or general area, inspection days and hours, and how long a winner has to collect.
-        I have left these out rather than guess, and they are the questions buyers will ask first.
+        <strong className="text-gold">Inspection and collection.</strong> Both are arranged
+        with us directly rather than booked online. Message us to fix a viewing time before
+        you bid, and the collection window is agreed with the winner on the day the lot closes.
       </div>
 
-      <h2 className="mt-14 font-display text-3xl">Common questions</h2>
-      <dl className="mt-6 divide-y divide-line rounded-2xl border border-line bg-card">
-        {FAQ.map((item) => (
-          <div key={item.q} className="p-6">
-            <dt className="font-semibold">{item.q}</dt>
-            <dd className="mt-2 text-muted">{item.a}</dd>
-          </div>
-        ))}
-      </dl>
+      <Reveal>
+        <h2 className="mt-14 font-display text-3xl">Common questions</h2>
+      </Reveal>
+      <Reveal>
+        <dl className="mt-6 divide-y divide-line rounded-2xl border border-line bg-card">
+          {FAQ.map((item) => (
+            <div key={item.q} className="p-6">
+              <dt className="font-semibold">{item.q}</dt>
+              <dd className="mt-2 text-muted">{item.a}</dd>
+            </div>
+          ))}
+        </dl>
+      </Reveal>
 
       {/* FAQPage structured data. Keep in sync with the FAQ array above. */}
       <script

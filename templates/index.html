@@ -1,14 +1,14 @@
 {% extends "base.html" %}
-{% block title %}AuctionGera — Shed &amp; Structure Auctions{% endblock %}
+{% block title %}AuctionGera | Barn-Find Car Parts at Auction{% endblock %}
 
 {% block content %}
 
 <!-- ── Hero ── -->
 <section class="hero">
   <div class="hero-content">
-    <div class="hero-badge"><svg class="icon icon-sm"><use href="#i-gavel"/></svg> Premium Shed Auctions</div>
-    <h1>Bid on Quality<br><span>Sheds &amp; Structures</span></h1>
-    <p>Live auctions for workshops, storage sheds, and garden structures. Transparent bidding, verified listings, and prices the retail lot can't touch.</p>
+    <div class="hero-badge"><svg class="icon icon-sm"><use href="#i-gavel"/></svg> Barn-Find Car Parts</div>
+    <h1>A barn full of parts<br><span>that have not moved in decades</span></h1>
+    <p>Seats, panels, wheels, trim, and the odd complete assembly. Stored dry, sold honestly, lot by lot. Inspect in person, bid online, pay cash on pickup.</p>
     <div class="hero-actions">
       <a href="#live" class="btn btn-primary btn-lg">View Live Auctions <svg class="icon"><use href="#i-arrow"/></svg></a>
       {% if not current_user.is_authenticated %}
@@ -58,9 +58,9 @@
             <div class="card-image">
               {% if auction.image_url %}
                 <img src="{{ auction.image_url }}" alt="{{ auction.title }}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                <div class="card-image-placeholder" style="display:none;"><svg class="icon icon-xl"><use href="#i-shed"/></svg><span>{{ auction.shed_type }}</span></div>
+                <div class="card-image-placeholder" style="display:none;"><svg class="icon icon-xl"><use href="#i-mark"/></svg><span>{{ auction.shed_type }}</span></div>
               {% else %}
-                <div class="card-image-placeholder"><svg class="icon icon-xl"><use href="#i-shed"/></svg><span>{{ auction.shed_type }}</span></div>
+                <div class="card-image-placeholder"><svg class="icon icon-xl"><use href="#i-mark"/></svg><span>{{ auction.shed_type }}</span></div>
               {% endif %}
               <div class="status-badge status-live"><span class="live-dot"></span> Live</div>
             </div>
@@ -97,7 +97,7 @@
     </div>
   {% else %}
     <div class="empty-state">
-      <div class="empty-icon"><svg class="icon icon-xl"><use href="#i-shed"/></svg></div>
+      <div class="empty-icon"><svg class="icon icon-xl"><use href="#i-mark"/></svg></div>
       <div class="empty-title">No live auctions right now</div>
       <p>Check back soon or browse upcoming auctions below.</p>
     </div>
@@ -121,9 +121,9 @@
           <div class="card-image">
             {% if auction.image_url %}
               <img src="{{ auction.image_url }}" alt="{{ auction.title }}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-              <div class="card-image-placeholder" style="display:none;"><svg class="icon icon-xl"><use href="#i-shed"/></svg><span>{{ auction.shed_type }}</span></div>
+              <div class="card-image-placeholder" style="display:none;"><svg class="icon icon-xl"><use href="#i-mark"/></svg><span>{{ auction.shed_type }}</span></div>
             {% else %}
-              <div class="card-image-placeholder"><svg class="icon icon-xl"><use href="#i-shed"/></svg><span>{{ auction.shed_type }}</span></div>
+              <div class="card-image-placeholder"><svg class="icon icon-xl"><use href="#i-mark"/></svg><span>{{ auction.shed_type }}</span></div>
             {% endif %}
             <div class="status-badge status-upcoming"><svg class="icon icon-sm"><use href="#i-calendar"/></svg> Upcoming</div>
           </div>
@@ -197,9 +197,9 @@
           <div class="card-image">
             {% if auction.image_url %}
               <img src="{{ auction.image_url }}" alt="{{ auction.title }}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-              <div class="card-image-placeholder" style="display:none;"><svg class="icon icon-xl"><use href="#i-shed"/></svg></div>
+              <div class="card-image-placeholder" style="display:none;"><svg class="icon icon-xl"><use href="#i-mark"/></svg></div>
             {% else %}
-              <div class="card-image-placeholder"><svg class="icon icon-xl"><use href="#i-shed"/></svg></div>
+              <div class="card-image-placeholder"><svg class="icon icon-xl"><use href="#i-mark"/></svg></div>
             {% endif %}
             <div class="status-badge status-ended"><svg class="icon icon-sm"><use href="#i-check"/></svg> Ended</div>
           </div>

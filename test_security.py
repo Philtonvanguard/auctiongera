@@ -191,6 +191,126 @@ def test_run_py_refuses_public_host_with_debugger():
     assert 'Refusing to start' in (r.stderr + r.stdout), (r.stdout, r.stderr)
 
 
+@check
+def test_privacy_request_is_stored_before_confirming():
+    """The page may only claim "request received" for a row that exists. The old
+    version opened a mailto: link and confirmed unconditionally, so anyone
+    without a mail handler lost their request and was told it had worked."""
+    client = A.app.test_client()
+    res = client.post('/opt-out', json={
+        'email': 'bidder@example.com',
+        'username': 'bidder',
+        'request': 'delete',
+        'notes': 'please remove everything',
+    })
+    assert res.status_code == 201, 'valid request returned %s' % res.status_code
+    reference = res.get_json()['id']
+
+    with A.app.app_context():
+        stored = A.db.session.get(A.PrivacyRequest, reference)
+        assert stored is not None, 'endpoint confirmed a request it never stored'
+        assert stored.email == 'bidder@example.com'
+        assert stored.kind == 'delete'
+
+
+@check
+def test_privacy_request_rejects_junk_without_storing_it():
+    """This is the statutory rights channel. A request we cannot act on has to
+    fail visibly rather than land in the table as an unactionable row."""
+    client = A.app.test_client()
+    with A.app.app_context():
+        before = A.PrivacyRequest.query.count()
+
+    for payload, label in (
+        ({'email': 'bidder@example.com', 'request': 'drop-tables'}, 'unknown request kind'),
+        ({'email': 'not-an-email', 'request': 'delete'}, 'malformed email'),
+        ({'email': 'missing@tld', 'request': 'delete'}, 'email with no TLD'),
+        ({'email': '', 'request': 'delete'}, 'empty email'),
+    ):
+        res = client.post('/opt-out', json=payload)
+        assert res.status_code == 400, '%s was accepted (%s)' % (label, res.status_code)
+        assert 'error' in res.get_json(), '%s returned no error message' % label
+
+    with A.app.app_context():
+        assert A.PrivacyRequest.query.count() == before, 'a rejected request was stored anyway'
+
+
+@check
+def test_chat_embed_is_not_loaded_without_consent():
+    """Tawk.to sets third-party cookies and receives the signed-in user's name
+    and email, so the embed must never be in the HTML. consent.js injects it
+    after opt-in, and not at all when Global Privacy Control is set."""
+    A.app.config['TAWK_PROPERTY_ID'] = 'test-property'
+    A.app.config['TAWK_WIDGET_ID'] = 'test-widget'
+    try:
+        html = A.app.test_client().get('/opt-out').data.decode()
+        assert 'embed.tawk.to' not in html, 'chat embed ships in the page unasked'
+        assert 'consent.js' in html, 'consent gate is not loaded, so chat can never start'
+    finally:
+        A.app.config['TAWK_PROPERTY_ID'] = ''
+        A.app.config['TAWK_WIDGET_ID'] = ''
+
+
+def _lot(**kw):
+    now = datetime.utcnow()
+    defaults = dict(title='t', description='d', shed_type='c', starting_price=1,
+                    current_price=1, start_time=now - timedelta(days=1),
+                    end_time=now + timedelta(days=1))
+    defaults.update(kw)
+    return A.Auction(**defaults)
+
+
+@check
+def test_gallery_orders_cover_first_and_drops_duplicates():
+    """One accessor feeds the card, the detail page, and the JSON, so they
+    cannot disagree about which photo leads."""
+    lot = _lot(image_url='/a.jpg', extra_images='/b.jpg\n/c.jpg')
+    assert lot.images == ['/a.jpg', '/b.jpg', '/c.jpg'], lot.images
+
+    # Pasting the cover into the extras box is the obvious mistake to make.
+    dupe = _lot(image_url='/a.jpg', extra_images='/a.jpg\n/b.jpg')
+    assert dupe.images == ['/a.jpg', '/b.jpg'], dupe.images
+
+    # Blank lines and stray whitespace come free with a textarea.
+    messy = _lot(image_url='/a.jpg', extra_images='\n  /b.jpg  \n\n\n')
+    assert messy.images == ['/a.jpg', '/b.jpg'], messy.images
+
+    assert _lot(image_url='', extra_images='').images == []
+    assert _lot(image_url='', extra_images=None).images == []
+    # A lot with no cover but extras should still show its photos.
+    assert _lot(image_url='', extra_images='/b.jpg').images == ['/b.jpg']
+
+
+@check
+def test_lots_feed_carries_the_gallery():
+    with A.app.app_context():
+        lot = _lot(title='Gallery lot', image_url='/a.jpg', extra_images='/b.jpg')
+        A.db.session.add(lot)
+        A.db.session.commit()
+
+    payload = A.app.test_client().get('/api/lots').get_json()
+    entry = next(l for l in payload if l['title'] == 'Gallery lot')
+    assert entry['images'] == ['/a.jpg', '/b.jpg'], entry.get('images')
+    # image_url stays so anything reading the old field keeps working.
+    assert entry['image_url'] == '/a.jpg'
+    assert 'reserve_price' not in entry, 'gallery change leaked the reserve price'
+
+
+@check
+def test_missing_column_migration_is_idempotent_and_real():
+    """db.create_all() adds tables, never columns. Without the migration the
+    live Postgres keeps an auction table with no extra_images and every query
+    against it fails, while a fresh local SQLite file looks perfectly fine."""
+    from sqlalchemy import inspect
+    with A.app.app_context():
+        columns = {c['name'] for c in inspect(A.db.engine).get_columns('auction')}
+        assert 'extra_images' in columns, 'init_db did not add the column'
+
+        # Re-running must not raise: it happens on every restart and redeploy.
+        A._add_missing_columns()
+        A._add_missing_columns()
+
+
 if __name__ == '__main__':
     for fn in CHECKS:
         fn()

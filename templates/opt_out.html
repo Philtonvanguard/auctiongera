@@ -20,6 +20,7 @@
 .opt-alt{margin-top:24px;padding-top:20px;border-top:1px solid var(--border);font-size:.92rem;color:var(--text-muted);text-align:center}
 #confirm{display:none;background:rgba(56,161,105,.08);border:1px solid rgba(56,161,105,.3);border-radius:var(--radius);padding:24px;text-align:center;margin-top:20px}
 #confirm h3{color:var(--success);font-size:1.1rem;margin-bottom:8px}
+#optOutError{display:none;background:rgba(229,72,77,.08);border:1px solid rgba(229,72,77,.35);border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:.9rem;color:var(--text)}
 </style>
 {% endblock %}
 {% block content %}
@@ -27,7 +28,7 @@
   <a href="{{ url_for('index') }}" class="legal-back">← Back to auctions</a>
   <span class="legal-eyebrow">Your Choice</span>
   <h1>Opt Out & <em>Data Requests</em></h1>
-  <p class="legal-lead">No questions, no friction. Tell us what you want and we'll handle it within 30 days — most requests within 72 hours.</p>
+  <p class="legal-lead">No questions, no friction. Tell us what you want and we handle it within 30 days. Most requests are done inside 72 hours.</p>
 
   <div class="legal-callout">
     <strong>Quick note:</strong> Opting out of marketing does <em>not</em> affect transactional notices for active auctions. If you have a winning bid or open listing, you'll still receive bid/payment/pickup emails until that transaction is complete.
@@ -81,12 +82,15 @@
         <textarea id="notes" name="notes" class="form-control" placeholder="Anything else we should know?" style="min-height:90px;resize:vertical"></textarea>
       </div>
 
+      <p id="optOutError" role="alert"></p>
+
       <button type="submit" class="btn btn-primary btn-full btn-lg">Submit Request</button>
     </form>
 
     <div id="confirm">
-      <h3>✓ Request received</h3>
-      <p style="color:var(--text)">We've recorded your request. You'll receive a confirmation email at the address you provided. We process all requests within 30 days — most within 72 hours.</p>
+      <h3>Request received</h3>
+      <p style="color:var(--text)">Your reference is <strong id="reference"></strong>. Write it down if you want to follow up.</p>
+      <p style="color:var(--text)">We reply to the address you gave us. Most requests are handled within 72 hours, and all of them inside the 30 days the law allows.</p>
     </div>
   </div>
 
@@ -96,26 +100,47 @@
 </div>
 
 <script>
-document.getElementById('optOutForm').addEventListener('submit', function(e){
-  e.preventDefault();
-  const data = {
-    email: document.getElementById('email').value,
-    username: document.getElementById('username').value,
-    request: (document.querySelector('input[name="request"]:checked')||{}).value,
-    notes: document.getElementById('notes').value,
-    submittedAt: new Date().toISOString()
-  };
-  const subject = encodeURIComponent('AuctionGera Opt-Out Request: ' + (data.request||'unspecified'));
-  const body = encodeURIComponent(
-    'Email: ' + data.email + '\n' +
-    'Username: ' + (data.username||'(not provided)') + '\n' +
-    'Request: ' + (data.request||'(not selected)') + '\n' +
-    'Notes: ' + (data.notes||'(none)') + '\n' +
-    'Submitted: ' + data.submittedAt
-  );
-  window.location.href = 'mailto:contact@vipelex.com?subject=' + subject + '&body=' + body;
-  document.getElementById('optOutForm').style.display = 'none';
-  document.getElementById('confirm').style.display = 'block';
-});
+/* Posts to the server and only confirms once the request is stored. The old
+   version opened a mailto: link and declared success immediately, so a visitor
+   with no mail handler lost the request and was told it had been received. */
+(function () {
+  var form = document.getElementById('optOutForm');
+  var button = form.querySelector('button[type="submit"]');
+  var error = document.getElementById('optOutError');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    error.style.display = 'none';
+    button.disabled = true;
+    button.textContent = 'Sending...';
+
+    fetch('{{ url_for("opt_out") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: document.getElementById('email').value,
+        username: document.getElementById('username').value,
+        request: (document.querySelector('input[name="request"]:checked') || {}).value,
+        notes: document.getElementById('notes').value
+      })
+    }).then(function (res) {
+      return res.json().then(function (body) { return { ok: res.ok, body: body }; });
+    }).then(function (result) {
+      if (!result.ok) throw new Error(result.body.error || 'Something went wrong.');
+      document.getElementById('reference').textContent = 'AG-' + result.body.id;
+      form.style.display = 'none';
+      document.getElementById('confirm').style.display = 'block';
+    }).catch(function (err) {
+      // Never claim success we cannot verify. The mailto fallback stays
+      // reachable below the form so the visitor is not stranded.
+      error.textContent = err.message === 'Failed to fetch'
+        ? 'Could not reach the server. Check your connection, or email us directly using the link below.'
+        : err.message;
+      error.style.display = 'block';
+      button.disabled = false;
+      button.textContent = 'Submit Request';
+    });
+  });
+})();
 </script>
 {% endblock %}

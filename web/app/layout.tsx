@@ -22,6 +22,18 @@ export const metadata: Metadata = {
     title: "AuctionGera | Barn-Find Car Parts at Auction",
     description:
       "A barn of stored car parts, sold lot by lot at open auction. Inspect in person, bid online, pay cash on pickup.",
+    // Without this, sharing the site anywhere that unfurls links produces a
+    // bare grey box. An auction lives or dies on people passing the link on.
+    // metadataBase above makes the relative path absolute.
+    images: [{ url: "/hero-poster.jpg", width: 1920, height: 1080,
+               alt: "Stored car parts stacked inside the barn" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AuctionGera | Barn-Find Car Parts at Auction",
+    description:
+      "A barn of stored car parts, sold lot by lot at open auction. Inspect in person, bid online, pay cash on pickup.",
+    images: ["/hero-poster.jpg"],
   },
   robots: { index: true, follow: true },
 };
@@ -35,8 +47,25 @@ const NAV = [
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+    // data-scroll-behavior is required from Next 16 on. globals.css sets
+    // scroll-behavior: smooth, and without this attribute Next no longer
+    // overrides it during navigation, so every route change animates a slow
+    // crawl to the top instead of jumping.
+    <html
+      lang="en"
+      data-scroll-behavior="smooth"
+      className={`${inter.variable} ${playfair.variable}`}
+    >
       <body className="font-sans bg-ink text-body antialiased flex min-h-screen flex-col">
+        {/* Reveals start hidden in CSS and are shown by an observer. With
+            scripting off that observer never runs, so this puts the content
+            back. Styles must not depend on a script having modified the DOM:
+            doing that from an inline script broke hydration and left whole
+            sections invisible. */}
+        <noscript>
+          <style>{`[data-reveal]{opacity:1 !important;transform:none !important}`}</style>
+        </noscript>
+
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-gold focus:px-4 focus:py-2 focus:font-semibold focus:text-ink"
@@ -55,7 +84,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <ul className="ml-auto hidden items-center gap-6 text-sm md:flex">
               {NAV.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className="text-muted transition-colors hover:text-body">
+                  <Link
+                    href={item.href}
+                    className="underline-grow text-muted transition-colors hover:text-body"
+                  >
                     {item.label}
                   </Link>
                 </li>
@@ -64,7 +96,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             <a
               href="/login"
-              className="ml-auto rounded-lg border border-gold/50 px-4 py-2 text-sm font-semibold text-gold transition-colors hover:bg-gold hover:text-ink md:ml-0"
+              className="press ml-auto rounded-lg border border-gold/50 px-4 py-2 text-sm font-semibold text-gold transition-colors hover:bg-gold hover:text-ink md:ml-0"
             >
               Sign in to bid
             </a>

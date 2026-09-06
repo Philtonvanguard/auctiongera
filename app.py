@@ -131,6 +131,11 @@ class Auction(db.Model):
     bid_increment = db.Column(db.Float, default=50.0)
     current_price = db.Column(db.Float, nullable=False)
     image_url = db.Column(db.String(500), default='')
+    # Additional photos, one URL per line. A delimited column rather than a
+    # LotImage table: a lot has a handful of photos in a fixed order and no
+    # per-photo data, so a join table would buy ordering we already get for
+    # free. Revisit if photos ever need captions or their own upload records.
+    extra_images = db.Column(db.Text, default='')
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=False)
     is_active = db.Column(db.Boolean, default=True)
@@ -147,6 +152,20 @@ class Auction(db.Model):
         if now > self.end_time:
             return 'ended'
         return 'live'
+
+    @property
+    def images(self):
+        """Every photo for this lot, cover first.
+
+        One accessor so the card, the detail page, and the JSON feed cannot
+        disagree about which image leads. Duplicates are dropped, since pasting
+        the cover into the extras box is the obvious mistake to make.
+        """
+        urls = [self.image_url] if self.image_url else []
+        urls += [line.strip() for line in (self.extra_images or '').splitlines()
+                 if line.strip()]
+        seen = set()
+        return [u for u in urls if not (u in seen or seen.add(u))]
 
     @property
     def highest_bid(self):
@@ -175,6 +194,22 @@ class PageView(db.Model):
     path = db.Column(db.String(255), nullable=False, index=True)
     ref  = db.Column(db.String(255))          # referrer hostname only
     ts   = db.Column(db.Integer, nullable=False, index=True)  # unix epoch
+
+
+# ── Privacy rights requests (CCPA/CPRA, GDPR) ───────────────────────────────
+# The row is written before any email is attempted, and the visitor is only
+# told the request was received once that commit succeeds. The old page built a
+# mailto: link, opened the mail client, and displayed "we've recorded your
+# request" whether or not mail ever left. Anyone without a mail handler lost
+# their request and was told it had worked.
+class PrivacyRequest(db.Model):
+    __tablename__ = 'privacy_request'
+    id         = db.Column(db.Integer, primary_key=True)
+    email      = db.Column(db.String(120), nullable=False, index=True)
+    username   = db.Column(db.String(80))
+    kind       = db.Column(db.String(32), nullable=False)
+    notes      = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
 
 @login_manager.user_loader
@@ -405,9 +440,55 @@ def privacy():
     return render_template('privacy.html')
 
 
-@app.route('/opt-out')
+# The five choices offered on the opt-out page. Anything else is rejected
+# rather than stored: this is the statutory rights channel, so a request we
+# cannot act on must fail visibly instead of landing in the table as junk.
+PRIVACY_REQUEST_KINDS = {
+    'unsubscribe', 'all-comms', 'access', 'delete', 'ccpa-no-sale',
+}
+
+
+@app.route('/opt-out', methods=['GET', 'POST'])
 def opt_out():
-    return render_template('opt_out.html')
+    if request.method == 'GET':
+        return render_template('opt_out.html')
+
+    data = request.get_json(silent=True) or request.form
+    email = (data.get('email') or '').strip()[:120]
+    kind = (data.get('request') or '').strip()
+    local, _, domain = email.partition('@')
+
+    if not local or '.' not in domain:
+        return jsonify({'error': 'Enter a valid email address.'}), 400
+    if kind not in PRIVACY_REQUEST_KINDS:
+        return jsonify({'error': 'Choose what you would like us to do.'}), 400
+
+    privacy_request = PrivacyRequest(
+        email=email,
+        username=(data.get('username') or '').strip()[:80] or None,
+        notes=(data.get('notes') or '').strip()[:2000] or None,
+        kind=kind,
+    )
+    db.session.add(privacy_request)
+    db.session.commit()
+
+    # Durable first, notification second. Emailit failing must not cost the
+    # visitor their request, so this runs after the commit and never blocks it.
+    send_alert_email(
+        'AuctionGera privacy request: %s' % kind,
+        'Request #%d\n'
+        'Type: %s\n'
+        'Email: %s\n'
+        'Username: %s\n'
+        'Notes: %s\n'
+        'Received: %s UTC\n'
+        % (privacy_request.id, kind, email,
+           privacy_request.username or '(not given)',
+           privacy_request.notes or '(none)',
+           privacy_request.created_at.strftime('%Y-%m-%d %H:%M:%S')),
+        reply_to=email)
+
+    return jsonify({'ok': True, 'id': privacy_request.id}), 201
 
 
 # ─── Analytics hit endpoint ───────────────────────────────────────────────────
@@ -442,6 +523,8 @@ def _lot_json(auction):
         'bid_increment': auction.bid_increment,
         'bid_count': auction.bid_count,
         'image_url': auction.image_url,
+        # Cover plus any extras. image_url stays for anything already reading it.
+        'images': auction.images,
         'start_time': auction.start_time.isoformat(),
         'end_time': auction.end_time.isoformat(),
         'status': auction.status,
@@ -514,6 +597,7 @@ def admin_new_auction():
                 bid_increment=bid_increment,
                 current_price=starting_price,
                 image_url=request.form.get('image_url', ''),
+                extra_images=request.form.get('extra_images', ''),
                 start_time=start_time,
                 end_time=end_time
             )
@@ -544,6 +628,7 @@ def admin_edit_auction(auction_id):
             auction.reserve_price = float(request.form.get('reserve_price', 0) or 0)
             auction.bid_increment = float(request.form.get('bid_increment', 50) or 50)
             auction.image_url = request.form.get('image_url', '')
+            auction.extra_images = request.form.get('extra_images', '')
             auction.start_time = datetime.strptime(request.form['start_time'], '%Y-%m-%dT%H:%M')
             auction.end_time = datetime.strptime(request.form['end_time'], '%Y-%m-%dT%H:%M')
             db.session.commit()
@@ -605,9 +690,34 @@ def admin_toggle_auction(auction_id):
 
 # ─── Init DB ──────────────────────────────────────────────────────────────────
 
+def _add_missing_columns():
+    """Add columns that exist on the models but not yet in the database.
+
+    db.create_all() creates missing tables and silently ignores missing
+    columns on tables that already exist. On a fresh local SQLite file
+    everything looks fine; on the live Postgres, which already has an auction
+    table, the new column never appears and every query against it fails. This
+    is the smallest thing that closes that gap without adding Alembic.
+
+    Idempotent: it inspects first, so restarts and redeploys are no-ops.
+    """
+    from sqlalchemy import inspect
+    inspector = inspect(db.engine)
+    if 'auction' not in inspector.get_table_names():
+        return
+    existing = {col['name'] for col in inspector.get_columns('auction')}
+    for name, ddl in (('extra_images', 'TEXT'),):
+        if name in existing:
+            continue
+        db.session.execute(text('ALTER TABLE auction ADD COLUMN %s %s' % (name, ddl)))
+        db.session.commit()
+        print('[OK] added auction.%s' % name)
+
+
 def init_db():
     with app.app_context():
         db.create_all()
+        _add_missing_columns()
         # ADMIN_PASSWORD (Render > Environment) is the source of truth for the
         # admin login. When set, it creates the admin if missing and resets the
         # password if it already exists, so a forgotten or leaked password is
