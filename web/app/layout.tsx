@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import Link from "next/link";
+import AuthLink from "@/components/AuthLink";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -94,12 +95,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               ))}
             </ul>
 
-            <a
-              href="/login"
-              className="press ml-auto rounded-lg border border-gold/50 px-4 py-2 text-sm font-semibold text-gold transition-colors hover:bg-gold hover:text-ink md:ml-0"
-            >
-              Sign in to bid
-            </a>
+            <AuthLink className="ml-auto md:ml-0" />
           </nav>
 
           {/* Nav collapses to a scrollable row on small screens. No JS drawer:

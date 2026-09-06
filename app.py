@@ -386,10 +386,13 @@ def register():
         if password != confirm:
             flash('Passwords do not match.', 'danger')
             return render_template('register.html')
-        if User.query.filter_by(username=username).first():
+        # Case-insensitive, because login now matches that way. Allowing both
+        # "Phil" and "phil" to exist would make a sign-in attempt ambiguous and
+        # hand the account to whichever row came back first.
+        if User.query.filter(db.func.lower(User.username) == username.lower()).first():
             flash('Username already taken.', 'danger')
             return render_template('register.html')
-        if User.query.filter_by(email=email).first():
+        if User.query.filter(db.func.lower(User.email) == email.lower()).first():
             flash('Email already registered.', 'danger')
             return render_template('register.html')
 
@@ -403,19 +406,44 @@ def register():
     return render_template('register.html')
 
 
+def safe_next(target):
+    """Return `target` only if it is a path on this site, else None.
+
+    Two problems at once. Anything absolute is an open redirect: /login?next=
+    https://evil.example lands a freshly authenticated user on someone else's
+    page. And "//evil.example" is protocol-relative, so it leaves the site
+    while looking like a path. Only a single leading slash is accepted.
+    """
+    if not target:
+        return None
+    if not target.startswith('/') or target.startswith('//'):
+        return None
+    return target
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        # Silently bouncing an already-signed-in user to a static page that
+        # still says "Sign in to bid" is what makes login look broken.
+        flash(f'You are already signed in as {current_user.username}.', 'info')
+        return redirect(safe_next(request.args.get('next')) or url_for('index'))
+
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
+        identifier = request.form.get('username', '').strip()
         password = request.form.get('password', '')
-        user = User.query.filter_by(username=username).first()
+        # People type the email they registered with, and they capitalise
+        # names. Matching only an exact-case username turns both into
+        # "invalid username or password", which reads as a broken login.
+        lowered = identifier.lower()
+        user = (User.query
+                .filter(db.or_(db.func.lower(User.username) == lowered,
+                               db.func.lower(User.email) == lowered))
+                .first())
         if user and user.check_password(password):
             login_user(user, remember=request.form.get('remember') == 'on')
-            next_page = request.args.get('next')
             flash(f'Welcome back, {user.username}!', 'success')
-            return redirect(next_page or url_for('index'))
+            return redirect(safe_next(request.args.get('next')) or url_for('index'))
         flash('Invalid username or password.', 'danger')
     return render_template('login.html')
 
@@ -532,6 +560,26 @@ def _lot_json(auction):
         # public domain, so an absolute Render URL would send visitors off-site.
         'url': url_for('auction_detail', auction_id=auction.id),
     }
+
+
+@app.route('/api/me')
+def api_me():
+    """Sign-in state for the static marketing pages.
+
+    Those pages are prerendered files on Cloudflare and cannot know who is
+    reading them, so the header advertised "Sign in to bid" to people who were
+    already signed in. Returns the username only: enough to greet someone,
+    nothing worth leaking. Never cached, or one visitor's name would be served
+    to the next from the CDN.
+    """
+    if current_user.is_authenticated:
+        body = {'authenticated': True, 'username': current_user.username,
+                'is_admin': current_user.is_admin}
+    else:
+        body = {'authenticated': False}
+    response = jsonify(body)
+    response.headers['Cache-Control'] = 'no-store, private'
+    return response
 
 
 @app.route('/api/lots')

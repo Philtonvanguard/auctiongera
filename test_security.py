@@ -1,5 +1,6 @@
 """Smoke checks for the auth/bid paths. Run: python test_security.py"""
 import io
+import re
 import os, sys, tempfile
 from datetime import datetime, timedelta
 
@@ -338,6 +339,95 @@ def test_admin_form_keeps_a_category_not_in_the_dropdown():
     assert '<option value="Barn"' in select, 'the lot\'s own category vanished'
     assert 'value="Barn" selected' in select.replace('  ', ' '), \
         'category present but not selected, so saving would silently change it'
+
+
+@check
+def test_next_only_accepts_on_site_paths():
+    """?next= must not be able to send a freshly signed-in user off-site."""
+    for hostile in ('https://evil.example/x', 'http://evil.example',
+                    '//evil.example/x', 'javascript:alert(1)',
+                    'http://auctiongera.onrender.com/auction/1'):
+        assert A.safe_next(hostile) is None, 'accepted %r' % hostile
+    for ok in ('/auction/1', '/lots', '/admin/analytics'):
+        assert A.safe_next(ok) == ok, 'rejected %r' % ok
+    assert A.safe_next(None) is None and A.safe_next('') is None
+
+
+@check
+def test_login_to_bid_link_stays_on_this_domain():
+    """Behind Cloudflare, Flask sees the Render host because X-Forwarded-Host
+    is not honoured. Building next= from request.url therefore pointed at
+    auctiongera.onrender.com, where the session cookie does not exist, so a
+    successful login landed the bidder looking signed out."""
+    with A.app.app_context():
+        lot = _lot(title='Live lot for link check')
+        A.db.session.add(lot)
+        A.db.session.commit()
+        lot_id = lot.id
+
+    html = A.app.test_client().get(
+        '/auction/%d' % lot_id,
+        headers={'Host': 'auctiongera.onrender.com',
+                 'X-Forwarded-Host': 'auctiongera.bid'}).data.decode()
+
+    links = re.findall(r'href="([^"]*next=[^"]*)"', html)
+    assert links, 'the Login to Bid link did not render for a live lot'
+    for link in links:
+        assert 'onrender.com' not in link, link
+        assert 'http' not in link.split('next=')[1], 'next= is absolute: %s' % link
+
+
+@check
+def test_sign_in_accepts_email_and_ignores_case():
+    with A.app.app_context():
+        u = A.User(username='BarnBuyer', email='Buyer@Example.com')
+        u.set_password('a good long passphrase')
+        A.db.session.add(u)
+        A.db.session.commit()
+
+    for identifier in ('BarnBuyer', 'barnbuyer', 'Buyer@Example.com',
+                       'buyer@example.com'):
+        client = A.app.test_client()
+        res = client.post('/login',
+                          data={'username': identifier,
+                                'password': 'a good long passphrase'})
+        assert res.status_code == 302, '%r did not sign in' % identifier
+        me = client.get('/api/me').get_json()
+        assert me['authenticated'] and me['username'] == 'BarnBuyer', identifier
+
+    bad = A.app.test_client().post(
+        '/login', data={'username': 'barnbuyer', 'password': 'wrong'})
+    assert bad.status_code == 200, 'a wrong password was accepted'
+
+
+@check
+def test_register_blocks_case_variant_duplicates():
+    """Login matches case-insensitively, so allowing both "Phil" and "phil"
+    would make a sign-in ambiguous and hand over whichever row came first."""
+    client = A.app.test_client()
+    form = dict(username='DupCheck', email='dup@example.com',
+                password='a good long passphrase',
+                confirm_password='a good long passphrase')
+    client.post('/register', data=form)
+
+    client.post('/register', data=dict(form, username='dupcheck',
+                                       email='other@example.com'))
+    client.post('/register', data=dict(form, username='Other',
+                                       email='DUP@example.com'))
+    with A.app.app_context():
+        assert A.User.query.filter(
+            A.db.func.lower(A.User.username) == 'dupcheck').count() == 1
+        assert A.User.query.filter(
+            A.db.func.lower(A.User.email) == 'dup@example.com').count() == 1
+
+
+@check
+def test_api_me_is_never_cached():
+    """It sits behind a CDN. A cached response would hand one visitor's name
+    to the next person through the same edge."""
+    res = A.app.test_client().get('/api/me')
+    assert res.get_json() == {'authenticated': False}, res.get_json()
+    assert 'no-store' in res.headers.get('Cache-Control', ''), res.headers
 
 
 if __name__ == '__main__':

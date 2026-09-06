@@ -26,6 +26,7 @@ const PROXY_PREFIXES = [
   "/static/",
   "/api/hit",
   "/api/lots",
+  "/api/me",
 ];
 
 const shouldProxy = (pathname: string) =>

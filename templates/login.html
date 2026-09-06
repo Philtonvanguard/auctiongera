@@ -11,8 +11,10 @@
 
     <form method="POST">
       <div class="form-group">
-        <label class="form-label">Username</label>
-        <input type="text" name="username" class="form-control" placeholder="Your username" required autofocus>
+        <label class="form-label">Username or email</label>
+        <input type="text" name="username" class="form-control"
+               placeholder="Your username or email" required autofocus
+               autocomplete="username" autocapitalize="none" spellcheck="false">
       </div>
       <div class="form-group">
         <label class="form-label">Password</label>
