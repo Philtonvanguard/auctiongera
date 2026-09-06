@@ -1026,6 +1026,9 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 .footer-col-title { font-size: 0.76rem; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 6px; }
 .footer-col a { color: var(--text-muted); font-size: 0.9rem; }
 .footer-col a:hover { color: var(--primary); }
+/* <address> defaults to italic, which reads as emphasis rather than a postal
+   address sitting under three plain links. */
+.footer-address { font-style: normal; color: var(--text-muted); font-size: 0.86rem; line-height: 1.6; }
 .footer-copy { color: rgba(143,159,186,0.7); font-size: 0.82rem; text-align: center; }
 
 /* ══════════════════════════════════════════ RESPONSIVE */

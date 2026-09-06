@@ -111,8 +111,23 @@
         <a href="{{ url_for('privacy') }}">Privacy Policy</a>
         <a href="{{ url_for('opt_out') }}">Opt Out / Data Requests</a>
       </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Contact</div>
+        <a href="mailto:{{ BUSINESS.email }}">{{ BUSINESS.email }}</a>
+        <a href="tel:{{ BUSINESS.phone }}">{{ BUSINESS.phone_display }}</a>
+        <a href="sms:{{ BUSINESS.phone }}">Text {{ BUSINESS.phone_display }}</a>
+        {# CAN-SPAM wants a real postal address reachable from any page. #}
+        <address class="footer-address">
+          {{ BUSINESS.entity }}<br>
+          {{ BUSINESS.address_line }}<br>
+          {{ BUSINESS.address_city }}
+        </address>
+      </div>
     </div>
-    <div class="footer-copy">© 2026 AuctionGera. All rights reserved.</div>
+    <div class="footer-copy">
+      © 2026 AuctionGera, operated by {{ BUSINESS.entity }},
+      a {{ BUSINESS.jurisdiction }} limited liability company. All rights reserved.
+    </div>
   </div>
 </footer>
 
@@ -168,7 +183,10 @@ window.__AG_CHAT = { p: '{{ config.TAWK_PROPERTY_ID }}', w: '{{ config.TAWK_WIDG
 var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
 Tawk_API.onLoad = function(){
   Tawk_API.setAttributes({
-    'property': 'auctiongera.vipelex.com',
+    // Read from the browser, not hardcoded: this said auctiongera.vipelex.com
+    // long after the site moved to auctiongera.bid, and the marketing half on
+    // Pages reports the same way, so both halves agree without a second edit.
+    'property': window.location.hostname,
     'page': window.location.pathname
   }, function(error){});
   {% if current_user and current_user.is_authenticated %}

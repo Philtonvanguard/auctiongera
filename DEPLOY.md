@@ -28,8 +28,9 @@ Environment variables:
 | `DATABASE_URL` | Already set, points at `Auctiongera DB` |
 | `ADMIN_PASSWORD` | **Source of truth for the admin login.** Creates the admin if missing, resets the password if it exists. Set it here and redeploy to change the admin password; no database access needed. Leaving it set means every restart re-applies it, which is intended. |
 | `ADMIN_EMAIL` | Optional |
-| `N8N_BID_WEBHOOK` | Bid notification email |
+| `N8N_BID_WEBHOOK` | Bid notification webhook |
 | `N8N_PAYMENT_WEBHOOK` | Firefly III transaction log |
+| `EMAILIT_API_KEY` / `ALERT_TO_EMAIL` | **Bid alert emails.** Without both, `notify_bid_email` logs a `[WARN]` and sends nothing. `ALERT_FROM_EMAIL` is optional and defaults to `AuctionGera <noreply@vipelex.com>`. |
 | `TAWK_PROPERTY_ID` / `TAWK_WIDGET_ID` | Chat widget renders only when both are set |
 
 ## 2. Cloudflare Pages (the marketing site)
@@ -76,7 +77,13 @@ Environment variables:
 | `FLASK_ORIGIN` | `https://auctiongera.onrender.com` (used at runtime by the proxy) |
 | `AUCTION_API_URL` | `https://auctiongera.onrender.com` (used at build time to bake lots into the HTML) |
 | `SITE_URL` | `https://auctiongera.bid`. Drives canonical URLs, OG tags, and the sitemap. |
-| `N8N_CONTACT_WEBHOOK` | Contact form destination. Needs a **new** n8n workflow; the bid and payment webhooks will not fit this payload. |
+| `EMAILIT_API_KEY`, `CONTACT_FROM_EMAIL`, `CONTACT_TO_EMAIL` | **Contact form destination.** All three, or `functions/api/contact.ts` returns 503 and the visitor is told to email directly. This replaced `N8N_CONTACT_WEBHOOK`, which nothing reads any more. |
+| `TAWK_PROPERTY_ID` / `TAWK_WIDGET_ID` | Same two IDs as Render. **Both hosts need them.** Baked in at build time, so changing them needs a rebuild, not just a redeploy. |
+
+The chat widget and its consent banner are one gate shared by both halves:
+`static/js/consent.js` is the only copy, and `npm run sync:consent` (which
+`prebuild` runs for you) copies it into `web/public/js/` at build time. Edit the
+Flask copy. `web/public/js/consent.js` is gitignored because it is generated.
 
 ## 3. Domain
 

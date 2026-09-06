@@ -252,6 +252,98 @@ def test_chat_embed_is_not_loaded_without_consent():
         A.app.config['TAWK_WIDGET_ID'] = ''
 
 
+@check
+def test_register_enforces_a_password_length_server_side():
+    """The form promised 8 characters, the input allowed 6, and the route
+    checked nothing, so a direct POST could open a bidding account with a
+    one-character password. The hint must quote the same number it enforces."""
+    client = A.app.test_client()
+    short = 'a' * (A.MIN_PASSWORD_LENGTH - 1)
+    client.post('/register', data=dict(
+        username='ShortPass', email='short@example.com',
+        password=short, confirm_password=short))
+    with A.app.app_context():
+        assert A.User.query.filter_by(username='ShortPass').first() is None, \
+            'a password below the minimum created an account anyway'
+
+    html = client.get('/register').data.decode()
+    assert 'minlength="%d"' % A.MIN_PASSWORD_LENGTH in html, \
+        'the form hint and the server rule have drifted apart again'
+
+
+@check
+def test_marketing_half_gates_chat_the_same_way():
+    """The test above only covers the Flask pages. Most visitors land on the
+    Cloudflare Pages half, which is a separate app that has to honour the same
+    rule, and for months it honoured nothing: no chat and no consent banner at
+    all. The gate is now one file shared by both halves, so this guards the two
+    ways that can quietly come undone."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    layout = open(os.path.join(here, 'web', 'app', 'layout.tsx'),
+                  encoding='utf-8').read()
+    package = open(os.path.join(here, 'web', 'package.json'),
+                   encoding='utf-8').read()
+
+    assert 'embed.tawk.to' not in layout, \
+        'marketing layout embeds Tawk directly, bypassing the consent gate'
+    assert '/js/consent.js' in layout, \
+        'marketing layout dropped the consent gate, so chat can never start'
+    assert 'sync:consent' in package and 'prebuild' in package, \
+        'nothing copies consent.js into web/public, so the gate 404s in production'
+
+
+@check
+def test_both_halves_publish_the_same_contact_details():
+    """One domain, two apps. A visitor who finds one phone number in the footer
+    and a different one in the privacy policy has found a reason not to bid, and
+    CAN-SPAM wants the postal address to be the real one in both places."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    ts = open(os.path.join(here, 'web', 'lib', 'business.ts'),
+              encoding='utf-8').read()
+
+    for field in ('entity', 'email', 'phone', 'address_line'):
+        value = A.BUSINESS[field]
+        assert value in ts, \
+            'web/lib/business.ts is missing %s (%r) from app.py BUSINESS' % (field, value)
+
+    # The footer and the legal pages must actually render it, not just hold it.
+    for path in ('/terms', '/privacy'):
+        html = A.app.test_client().get(path).data.decode()
+        assert A.BUSINESS['entity'] in html, '%s names no legal entity' % path
+        assert A.BUSINESS['address_line'] in html, '%s has no postal address' % path
+        assert A.BUSINESS['email'] in html, '%s has no contact email' % path
+
+
+@check
+def test_no_placeholder_contact_address_survives():
+    """contact@vipelex.com was in four templates and is not the address the
+    business publishes. A rights request sent to a mailbox nobody reads is a
+    compliance failure that looks like a working page."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    templates = os.path.join(here, 'templates')
+    for name in os.listdir(templates):
+        if not name.endswith('.html'):
+            continue
+        body = open(os.path.join(templates, name), encoding='utf-8').read()
+        assert 'contact@vipelex.com' not in body, \
+            '%s still hardcodes contact@vipelex.com instead of BUSINESS.email' % name
+
+
+@check
+def test_consent_gate_has_one_source():
+    """web/public/js/consent.js is generated. If someone commits an edited copy
+    there, the two halves drift apart and only one of them honours GPC."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    copy = os.path.join(here, 'web', 'public', 'js', 'consent.js')
+    if not os.path.exists(copy):
+        return  # Not built yet. prebuild makes it.
+
+    source = open(os.path.join(here, 'static', 'js', 'consent.js'),
+                  encoding='utf-8').read()
+    assert open(copy, encoding='utf-8').read() == source, \
+        'web/public/js/consent.js differs from static/js/consent.js - edit the Flask copy'
+
+
 def _lot(**kw):
     now = datetime.utcnow()
     defaults = dict(title='t', description='d', shed_type='c', starting_price=1,

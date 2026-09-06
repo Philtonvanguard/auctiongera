@@ -42,3 +42,7 @@ next-env.d.ts
 
 # Static export output
 out/
+
+# Copied from ../static/js/consent.js by `npm run sync:consent` (prebuild).
+# Edit the Flask copy: it is the single source for both halves of the site.
+/public/js/consent.js

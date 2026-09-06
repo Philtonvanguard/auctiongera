@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "npm run sync:consent && next dev",
+    "prebuild": "npm run sync:consent",
+    "sync:consent": "node -e \"const f=require('fs');f.mkdirSync('public/js',{recursive:true});f.copyFileSync('../static/js/consent.js','public/js/consent.js')\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

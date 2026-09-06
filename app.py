@@ -89,6 +89,27 @@ if database_url.startswith('postgres://'):
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Single source for the password rule: the register route enforces it and
+# register.html quotes it, so the hint and the check cannot drift apart again.
+MIN_PASSWORD_LENGTH = 8
+app.jinja_env.globals['MIN_PASSWORD_LENGTH'] = MIN_PASSWORD_LENGTH
+
+# Published business identity. CAN-SPAM wants a real postal address in any
+# marketing mail, and the footer, the contact details and the legal pages all
+# have to agree, so they read these rather than each carrying their own copy.
+# The address is the LLC's registered commercial mailbox, never a home address.
+BUSINESS = {
+    'entity': 'Vipelex LLC',
+    'jurisdiction': 'Delaware',
+    'email': 'spinner@vipelex.com',
+    # Digits only for tel:/sms: links, formatted separately for display.
+    'phone': '+13022768934',
+    'phone_display': '(302) 276-8934',
+    'address_line': '254 Chapman Rd, Ste 208, PMB 20052',
+    'address_city': 'Newark, DE 19702',
+}
+app.jinja_env.globals['BUSINESS'] = BUSINESS
+
 # Tawk.to chat widget renders only when BOTH are set (Render > Environment).
 # Get the two IDs from the widget embed code: embed.tawk.to/<property>/<widget>
 app.config['TAWK_PROPERTY_ID'] = os.environ.get('TAWK_PROPERTY_ID', '')
@@ -386,6 +407,14 @@ def register():
         if password != confirm:
             flash('Passwords do not match.', 'danger')
             return render_template('register.html')
+        # The form said "Min. 8 characters" while the input allowed 6 and the
+        # server checked nothing at all, so a direct POST could set a one-
+        # character password on an account that places money bids. One number,
+        # enforced here, and the template hints now quote this same constant.
+        if len(password) < MIN_PASSWORD_LENGTH:
+            flash('Password must be at least %d characters.' % MIN_PASSWORD_LENGTH,
+                  'danger')
+            return render_template('register.html')
         # Case-insensitive, because login now matches that way. Allowing both
         # "Phil" and "phil" to exist would make a sign-in attempt ambiguous and
         # hand the account to whichever row came back first.
@@ -454,6 +483,15 @@ def logout():
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('index'))
+
+
+@app.errorhandler(404)
+def page_not_found(_e):
+    """Cloudflare only serves the marketing 404 for paths it owns. Everything
+    proxied here - every lot page, every mistyped /auction/<id> - was getting
+    Werkzeug's bare white default, which is a dead end with no way back into
+    the site. Sold lots are deleted, so this is a page real buyers reach."""
+    return render_template('404.html'), 404
 
 
 # ─── Legal / Compliance ───────────────────────────────────────────────────────

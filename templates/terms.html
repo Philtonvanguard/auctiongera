@@ -7,6 +7,7 @@
 .legal-wrap h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,4.5vw,3rem);font-weight:800;line-height:1.15;color:var(--text);margin-bottom:8px}
 .legal-wrap h1 em{font-style:italic;color:var(--primary)}
 .legal-updated{color:var(--text-muted);font-size:.88rem;margin-bottom:36px;padding-bottom:22px;border-bottom:1px solid var(--border)}
+.legal-address{font-style:normal;color:var(--text);font-size:.95rem;line-height:1.75;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin:0 0 14px}
 .legal-wrap h2{font-size:1.2rem;font-weight:700;color:var(--primary);margin:36px 0 12px}
 .legal-wrap h2::before{content:'§ ';color:var(--text-muted)}
 .legal-wrap p,.legal-wrap li{font-size:.98rem;color:var(--text);margin-bottom:14px;line-height:1.7}
@@ -30,7 +31,15 @@
   </div>
 
   <h2>1. Who These Terms Bind</h2>
-  <p>These Terms govern your use of <a href="{{ url_for('index') }}">AuctionGera</a> ("we," "us"). By creating an account, listing an item, or placing a bid, you ("you," "User") agree to these Terms.</p>
+  <p>These Terms govern your use of <a href="{{ url_for('index') }}">AuctionGera</a>, operated by {{ BUSINESS.entity }}, a {{ BUSINESS.jurisdiction }} limited liability company ("we," "us"). By creating an account, listing an item, or placing a bid, you ("you," "User") agree to these Terms.</p>
+  {# A binding contract has to name the party you are contracting with. #}
+  <address class="legal-address">
+    {{ BUSINESS.entity }}<br>
+    {{ BUSINESS.address_line }}<br>
+    {{ BUSINESS.address_city }}<br>
+    <a href="mailto:{{ BUSINESS.email }}">{{ BUSINESS.email }}</a> &middot;
+    <a href="tel:{{ BUSINESS.phone }}">{{ BUSINESS.phone_display }}</a>
+  </address>
 
   <h2>2. The Service</h2>
   <p>AuctionGera is an online auction platform for stored and salvaged vehicle parts. Lots are drawn from a single barn holding and include seats, panels, wheels, trim, and complete assemblies. We provide:</p>
@@ -89,7 +98,7 @@
   <p>We may update these Terms. Material changes will be announced on this page with a new "Last updated" date and, where required, by email or in-app notice.</p>
 
   <h2>13. Contact</h2>
-  <p>Questions? Email <a href="mailto:contact@vipelex.com">contact@vipelex.com</a>.</p>
+  <p>Questions? Email <a href="mailto:{{ BUSINESS.email }}">{{ BUSINESS.email }}</a> or call <a href="tel:{{ BUSINESS.phone }}">{{ BUSINESS.phone_display }}</a>.</p>
 
   <div class="legal-callout" style="margin-top:40px">
     <strong>This document is operational boilerplate, not legal advice.</strong> Auction platforms carry specific regulatory exposure covering consumer protection, sales tax, and state auctioneer licensing. Have a licensed attorney review this before treating it as your final terms.

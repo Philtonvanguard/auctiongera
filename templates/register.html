@@ -20,7 +20,9 @@
       </div>
       <div class="form-group">
         <label class="form-label">Password</label>
-        <input type="password" name="password" class="form-control" placeholder="Min. 8 characters" required minlength="6">
+        <input type="password" name="password" class="form-control"
+               placeholder="Min. {{ MIN_PASSWORD_LENGTH }} characters"
+               required minlength="{{ MIN_PASSWORD_LENGTH }}">
       </div>
       <div class="form-group">
         <label class="form-label">Confirm Password</label>
