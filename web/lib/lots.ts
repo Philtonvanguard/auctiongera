@@ -31,7 +31,17 @@ const API = process.env.AUCTION_API_URL ?? "http://127.0.0.1:5000";
  */
 export async function getLots(): Promise<Lot[]> {
   try {
-    const res = await fetch(`${API}/api/lots`, { signal: AbortSignal.timeout(45_000) });
+    // Next persists fetch responses in .next/cache and reuses them across
+    // builds. A rebuild served a response captured while the lot was still
+    // ended, so the static HTML filed a live auction under "Recently closed".
+    // The cache keys on the URL, so a per-build value defeats it.
+    //
+    // Not cache:"no-store": that marks the route dynamic, and output:"export"
+    // rejects a dynamic route, so the fetch throws and every page renders its
+    // empty state instead. Worse than stale.
+    const res = await fetch(`${API}/api/lots?build=${Date.now()}`, {
+      signal: AbortSignal.timeout(45_000),
+    });
     if (!res.ok) {
       console.error(`getLots: ${API} returned ${res.status}`);
       return [];
