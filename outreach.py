@@ -8,7 +8,14 @@ catalogued lot, what is your commission". Same inventory, three pitches.
 Placeholders are filled from a Lead row plus the valuation result.
 """
 
+import os
+
 import valuation
+
+# Where the lot is listed. Every pitch points here: it gives the buyer
+# something to look at, and it tells them a direct offer is the only way to
+# avoid bidding against everyone else.
+SITE_URL = os.environ.get('AUCTION_SITE_URL', 'auctiongera.bid')
 
 SIGNOFF = """
 {seller_name}
@@ -101,7 +108,9 @@ I'm looking for a one-time buyout of the whole lot rather than piecing it out.
 Wholesale appraisal on this inventory is {wholesale_range}.
 
 I can send a full inventory sheet with photos, paint codes and part numbers.
-Would you like it, and can you give me a number on the lot?
+
+The lot is also going up on my auction site, {site_url}, but I'd rather do a
+direct deal before it goes live. Can you give me a number on the whole lot?
 
 {signoff}""",
     },
@@ -117,7 +126,21 @@ estimates with used OEM instead of new factory parts, these will come in well
 under dealer pricing.
 
 Tell me the models you see most and I'll send you what I have that fits,
-with photos and paint codes.
+with photos and paint codes. The full lot is listed at {site_url}.
+
+{signoff}""",
+    },
+    'webform': {
+        'subject': '{total_panels}-piece German body panel lot - local pickup',
+        'body': """Local to New Castle County - I have {total_panels} used OEM German body
+panels (2011-2016 BMW / Mercedes-Benz / Audi): {mix_short}. {assembly_note}
+
+Good condition, sorted, all in one location, loads onto a box truck or trailer
+in a single trip. Full inventory sheet with part numbers, paint codes and
+photos available on request.
+
+It's going up on my auction site, {site_url}, but I'd rather deal direct
+before it goes live. Can you give me a number on the whole lot?
 
 {signoff}""",
     },
@@ -140,6 +163,8 @@ site. I'd like to understand:
   3. Realistic timeline from consignment to hammer
   4. Who handles removal and loading, and who pays for it
 
+For reference, the lot is catalogued at {site_url}.
+
 {signoff}""",
     },
 }
@@ -152,8 +177,17 @@ def build_email(lead, result=None, template=None, seller_name='',
     category = (lead.get('category') if isinstance(lead, dict)
                 else getattr(lead, 'category', None)) or 'unknown'
 
+    has_email = bool(lead.get('email') if isinstance(lead, dict)
+                     else getattr(lead, 'email', None))
+    has_site = bool(lead.get('website') if isinstance(lead, dict)
+                    else getattr(lead, 'website', None))
+
     if template is None:
-        if category in ('collision', 'collision_euro'):
+        # No email but a website means the contact form is the only way in,
+        # and those fields are short - use the compact pitch.
+        if not has_email and has_site:
+            template = 'webform'
+        elif category in ('collision', 'collision_euro'):
             template = 'shop'
         elif category in ('liquidator', 'appraiser'):
             template = 'liquidator'
@@ -190,6 +224,7 @@ def build_email(lead, result=None, template=None, seller_name='',
     money = lambda p: '${:,.0f} - ${:,.0f}'.format(p[0], p[1])   # noqa: E731
     fields = {
         'contact': contact,
+        'site_url': SITE_URL,
         'total_panels': result['total_panels'],
         'mix_lines': mix_lines,
         'mix_short': mix_short,

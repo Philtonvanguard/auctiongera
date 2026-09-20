@@ -113,10 +113,14 @@
       </div>
 
       <div class="lx-panel">
-        <h3>Email draft — {{ email.template }}</h3>
+        <h3>{{ 'Contact-form message' if email.template == 'webform' else 'Email draft' }} — {{ email.template }}</h3>
         <p style="font-size:.8rem;color:#6b7280;margin-bottom:10px;"><strong>Subject:</strong> {{ email.subject }}</p>
         <div class="lx-email" id="email-body">{{ email.body }}</div>
         <button class="lx-copy" type="button" data-copy="email-body" style="margin-top:10px;">Copy body</button>
+        {% if lead.website and not lead.email %}
+          <a class="lx-copy" style="text-decoration:none;display:inline-block;margin-left:6px;"
+             href="{{ lead.website }}" target="_blank" rel="noopener noreferrer">Open their site →</a>
+        {% endif %}
       </div>
     </div>
   </div>
