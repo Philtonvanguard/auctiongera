@@ -95,21 +95,19 @@ EMAIL_TEMPLATES = {
         'subject': '150-piece German body panel lot - New Castle County, DE',
         'body': """Hi{contact},
 
-I'm liquidating a single lot of {total_panels} used OEM German body panels,
-located in New Castle County, Delaware:
+I'm liquidating a single lot of roughly {total_panels} used OEM German body
+panels, located in New Castle County, Delaware - approximately:
 
 {mix_lines}
 
 Model years are roughly 2011-2016 - BMW, Mercedes-Benz and Audi. {assembly_note}
-Condition across the lot is {condition}. Everything is in one place and can be
-loaded onto a box truck or trailer in a single trip.
+Everything is in one place and loads onto a box truck or trailer in one trip.
 
-I'm looking for a one-time buyout of the whole lot rather than piecing it out.
-Wholesale appraisal on this inventory is {wholesale_range}.
+These are ballpark counts rather than an itemised list - I can send photos, or
+you're welcome to come look at the lot and price it yourself.
 
-I can send a full inventory sheet with photos, paint codes and part numbers.
-
-The lot is also going up on my auction site, {site_url}, but I'd rather do a
+I'm after a one-time buyout of the whole lot rather than piecing it out. The
+lot is also going up on my auction site, {site_url}, but I'd rather do a
 direct deal before it goes live. Can you give me a number on the whole lot?
 
 {signoff}""",
@@ -119,28 +117,29 @@ direct deal before it goes live. Can you give me a number on the whole lot?
         'body': """Hi{contact},
 
 I have used OEM body panels for 2011-2016 BMW, Mercedes-Benz and Audi in New
-Castle County - {total_panels} pieces in total: {mix_short}.
+Castle County - roughly {total_panels} pieces: about {mix_short}.
 
 {assembly_note} Most are straight and ready to prep. If you're writing
 estimates with used OEM instead of new factory parts, these will come in well
 under dealer pricing.
 
-Tell me the models you see most and I'll send you what I have that fits,
-with photos and paint codes. The full lot is listed at {site_url}.
+Tell me the models you see most and I'll check what I have that fits and send
+photos. The full lot is listed at {site_url}.
 
 {signoff}""",
     },
     'webform': {
         'subject': '{total_panels}-piece German body panel lot - local pickup',
-        'body': """Local to New Castle County - I have {total_panels} used OEM German body
-panels (2011-2016 BMW / Mercedes-Benz / Audi): {mix_short}. {assembly_note}
+        'body': """Local to New Castle County - I have roughly {total_panels} used OEM German
+body panels (2011-2016 BMW / Mercedes-Benz / Audi): about {mix_short}. Those
+are ballpark counts, not an itemised list. {assembly_note}
 
-Good condition, sorted, all in one location, loads onto a box truck or trailer
-in a single trip. Full inventory sheet with part numbers, paint codes and
-photos available on request.
+All in one place, loads onto a box truck or trailer in a single trip. Rather
+than me guess at what it's worth, come look at the lot and price it yourself -
+or I can send photos first.
 
 It's going up on my auction site, {site_url}, but I'd rather deal direct
-before it goes live. Can you give me a number on the whole lot?
+with a local yard before it goes live. Who should I talk to?
 
 {signoff}""",
     },
@@ -150,12 +149,12 @@ before it goes live. Can you give me a number on the whole lot?
 
 I'd like a quote on liquidating a commercial parts inventory:
 
-  Asset:     {total_panels} used OEM German auto body panels (2011-2016)
-  Mix:       {mix_short}
+  Asset:     ~{total_panels} used OEM German auto body panels (2011-2016)
+  Mix:       approximately {mix_short} (estimated, not yet itemised)
   Location:  Single location, New Castle County, DE
   Appraisal: {wholesale_range} wholesale / {retail_range} at individual retail
 
-Everything is in one place, sorted, and can be photographed and catalogued on
+Everything is in one place and can be counted, photographed and catalogued on
 site. I'd like to understand:
 
   1. Your seller's commission on a lot this size

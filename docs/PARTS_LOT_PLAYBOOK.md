@@ -208,6 +208,23 @@ site.
 5. **Then call.** `python -m scraper.cli outreach <lead_id>` prints the right
    script for that category and a matching email you can paste.
 
+### If you don't have an itemised list yet
+
+Don't wait for one, and don't imply you have one. The templates state the
+counts as approximate and offer two honest alternatives: photos, or come walk
+the lot. For a yard a few miles away the second is better anyway — they never
+trust a seller's list and would rather price it themselves.
+
+Two rules while you're working off a ballpark:
+
+- **Don't quote the appraisal range first.** You can't defend $12,400–$22,000
+  without a count, and anchoring high before they've seen it invites a lowball
+  counter or a walk. Let the buyer open. The appraisal is what you answer a
+  low offer with, not what you lead with.
+- **Count the doors before anyone arrives.** Doors are the biggest line
+  ($4,200–$7,200, plus $3,000–$4,800 in assembly premium). Even a rough tally
+  of doors-with-glass versus bare shells, written down, moves the offer.
+
 ---
 
 ## 6. Data hygiene
