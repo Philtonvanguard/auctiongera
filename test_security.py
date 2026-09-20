@@ -514,6 +514,33 @@ def test_register_blocks_case_variant_duplicates():
 
 
 @check
+def test_marketing_consent_is_stored_and_revocable():
+    """The register form has always shown a marketing tick and the privacy
+    policy promises marketing only on opt-in. The form value was never read,
+    so every consent was discarded and the promise was unkeepable either way.
+    """
+    client = A.app.test_client()
+    base = dict(password='a good long passphrase',
+                confirm_password='a good long passphrase')
+    client.post('/register', data=dict(base, username='OptIn',
+                                       email='optin@example.com',
+                                       marketing_opt_in='on'))
+    client.post('/register', data=dict(base, username='OptOut',
+                                       email='optout@example.com'))
+
+    with A.app.app_context():
+        assert A.User.query.filter_by(email='optin@example.com').first().marketing_opt_in is True
+        assert not A.User.query.filter_by(email='optout@example.com').first().marketing_opt_in
+
+    # An unsubscribe request has to act, not just file a ticket for later.
+    res = client.post('/opt-out', json={'email': 'OptIn@example.com',
+                                        'request': 'unsubscribe'})
+    assert res.status_code == 201, res.status_code
+    with A.app.app_context():
+        assert not A.User.query.filter_by(email='optin@example.com').first().marketing_opt_in
+
+
+@check
 def test_api_me_is_never_cached():
     """It sits behind a CDN. A cached response would hand one visitor's name
     to the next person through the same edge."""

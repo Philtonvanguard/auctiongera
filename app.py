@@ -129,6 +129,11 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    # Separate from the account itself: the register form offers it as an
+    # optional tick, the privacy policy promises marketing only on opt-in, and
+    # /opt-out clears it. Nullable on purpose so the ALTER on the live table
+    # needs no backfill, and a NULL reads as "never opted in".
+    marketing_opt_in = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     bids = db.relationship('Bid', backref='bidder', lazy=True)
 
@@ -425,7 +430,8 @@ def register():
             flash('Email already registered.', 'danger')
             return render_template('register.html')
 
-        user = User(username=username, email=email)
+        user = User(username=username, email=email,
+                    marketing_opt_in=bool(request.form.get('marketing_opt_in')))
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
@@ -536,6 +542,15 @@ def opt_out():
         kind=kind,
     )
     db.session.add(privacy_request)
+
+    # Act on it here rather than waiting for the alert to be read. The statute
+    # allows 10 business days; a flag that flips on submit cannot be forgotten
+    # on a busy week. Access and deletion still need a human.
+    if kind in ('unsubscribe', 'all-comms'):
+        user = User.query.filter(db.func.lower(User.email) == email.lower()).first()
+        if user is not None:
+            user.marketing_opt_in = False
+
     db.session.commit()
 
     # Durable first, notification second. Emailit failing must not cost the
@@ -789,15 +804,24 @@ def _add_missing_columns():
     """
     from sqlalchemy import inspect
     inspector = inspect(db.engine)
-    if 'auction' not in inspector.get_table_names():
-        return
-    existing = {col['name'] for col in inspector.get_columns('auction')}
-    for name, ddl in (('extra_images', 'TEXT'),):
-        if name in existing:
+    tables = set(inspector.get_table_names())
+    # Table names are quoted because "user" is reserved in Postgres and an
+    # unquoted ALTER TABLE user is a syntax error there, not a no-op.
+    wanted = {
+        'auction': (('extra_images', 'TEXT'),),
+        'user': (('marketing_opt_in', 'BOOLEAN'),),
+    }
+    for table, columns in wanted.items():
+        if table not in tables:
             continue
-        db.session.execute(text('ALTER TABLE auction ADD COLUMN %s %s' % (name, ddl)))
-        db.session.commit()
-        print('[OK] added auction.%s' % name)
+        existing = {col['name'] for col in inspector.get_columns(table)}
+        for name, ddl in columns:
+            if name in existing:
+                continue
+            db.session.execute(
+                text('ALTER TABLE "%s" ADD COLUMN %s %s' % (table, name, ddl)))
+            db.session.commit()
+            print('[OK] added %s.%s' % (table, name))
 
 
 def init_db():
