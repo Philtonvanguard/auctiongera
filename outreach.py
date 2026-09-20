@@ -26,63 +26,63 @@ Lot located in New Castle County, DE"""
 CALL_SCRIPTS = {
     'euro_recycler': (
         "Hi, I'm looking for whoever handles your parts buying. I have 150 "
-        "German body panels here in New Castle County - doors, hoods and "
+        "German body panels here in New Castle County. Doors, hoods and "
         "fenders off 2011 to 2016 BMW, Mercedes and Audi. It's one lot, and "
         "I'd rather move it in a single transaction than piece it out. Can I "
-        "email you the inventory sheet with photos and paint codes?"
+        "send you photos, or would you rather come look at it?"
     ),
     'salvage_yard': (
-        "Hi - do you buy parts batches to refresh inventory? I've got 150 "
+        "Hi, do you buy parts batches to refresh inventory? I've got 150 "
         "clean German body panels in New Castle County: roughly 60 doors, 40 "
-        "hoods and 50 fenders, 2011-2016 BMW, Mercedes and Audi. I'll sell "
-        "the whole lot at once. Who should I send the list to?"
+        "hoods and 50 fenders, 2011 to 2016 BMW, Mercedes and Audi. I'll sell "
+        "the whole lot at once. Who should I talk to about pricing it?"
     ),
     'dismantler': (
-        "Hi - I have a 150-piece lot of 2011-2016 German body panels in New "
-        "Castle County. You'd want to cherry-pick the high-demand ones, but "
+        "Hi, I have a 150 piece lot of 2011 to 2016 German body panels in New "
+        "Castle County. You'd want to pick over the best selling ones, but "
         "I'm looking to move all of it. Can we talk about a number for the "
-        "whole lot, or a per-panel price with a minimum take?"
+        "whole lot, or a per panel price with a minimum take?"
     ),
     'collision_euro': (
-        "Hi - I know you work on German cars. I've got used OEM doors, hoods "
-        "and fenders for 2011-2016 BMW, Mercedes and Audi sitting in New "
-        "Castle County - straight panels, most with glass and regulators "
+        "Hi, I know you work on German cars. I've got used OEM doors, hoods "
+        "and fenders for 2011 to 2016 BMW, Mercedes and Audi sitting in New "
+        "Castle County. Straight panels, most with glass and regulators "
         "still in. If you're writing estimates with used OEM instead of new "
-        "factory, I can quote you a lot cheaper than the dealer. Want the "
-        "list of what I have for your common models?"
+        "factory, I can quote you a lot cheaper than the dealer. Want me to "
+        "check what I have for your common models?"
     ),
     'collision': (
-        "Hi - I have used OEM body panels for 2011-2016 German cars, here in "
+        "Hi, I have used OEM body panels for 2011 to 2016 German cars, here in "
         "New Castle County. Doors, hoods, fenders. If a used OEM panel would "
         "save you money against a new factory part on an estimate, I can send "
         "you what I have. Interested?"
     ),
     'salvage_auction': (
-        "Hi - I'm not selling a vehicle, I'm sitting on 150 clean German body "
+        "Hi, I'm not selling a vehicle, I'm sitting on 150 clean German body "
         "panels in New Castle County. Your registered buyers are rebuilders "
         "who need exactly this. Is there someone on the buyer side I should "
         "talk to, or a consignment lane that would take a parts lot?"
     ),
     'liquidator': (
-        "Hi - I need a quote on liquidating a single commercial lot: 150 "
-        "German auto body panels, 2011-2016, appraised in the $12,000 to "
+        "Hi, I need a quote on liquidating a single commercial lot: 150 "
+        "German auto body panels, 2011 to 2016, appraised in the $12,000 to "
         "$22,000 wholesale range. Everything is in one location in New Castle "
         "County. What's your seller's commission, do you catalogue and "
         "photograph, and what's your realistic timeline to hammer?"
     ),
     'appraiser': (
-        "Hi - I need a written appraisal on a commercial parts inventory: 150 "
-        "German auto body panels, 2011-2016 model years, in New Castle "
+        "Hi, I need a written appraisal on a commercial parts inventory: 150 "
+        "German auto body panels, 2011 to 2016 model years, in New Castle "
         "County. Are you certified in machinery and technical specialties, "
         "and what do you charge for an inventory of this size?"
     ),
     'parts_store': (
-        "Hi - do you buy used OEM body panels? I have 150 German panels in "
-        "New Castle County: doors, hoods and fenders for 2011-2016 BMW, "
+        "Hi, do you buy used OEM body panels? I have 150 German panels in "
+        "New Castle County: doors, hoods and fenders for 2011 to 2016 BMW, "
         "Mercedes and Audi."
     ),
     'scrap': (
-        "Hi - what are you paying per ton on clean auto sheet and on "
+        "Hi, what are you paying per ton on clean auto sheet and on "
         "aluminium panels right now? I have around 150 body panels and I want "
         "to know the scrap floor before I sell them as parts."
     ),
@@ -92,32 +92,32 @@ CALL_SCRIPTS['unknown'] = CALL_SCRIPTS['salvage_yard']
 
 EMAIL_TEMPLATES = {
     'bulk': {
-        'subject': '150-piece German body panel lot - New Castle County, DE',
+        'subject': '150 piece German body panel lot in New Castle County, DE',
         'body': """Hi{contact},
 
 I'm liquidating a single lot of roughly {total_panels} used OEM German body
-panels, located in New Castle County, Delaware - approximately:
+panels, located in New Castle County, Delaware. Approximately:
 
 {mix_lines}
 
-Model years are roughly 2011-2016 - BMW, Mercedes-Benz and Audi. {assembly_note}
+Model years are roughly 2011 to 2016, BMW, Mercedes and Audi. {assembly_note}
 Everything is in one place and loads onto a box truck or trailer in one trip.
 
-These are ballpark counts rather than an itemised list - I can send photos, or
+These are ballpark counts rather than an itemised list, so I can send photos, or
 you're welcome to come look at the lot and price it yourself.
 
-I'm after a one-time buyout of the whole lot rather than piecing it out. The
+I'm after a single buyout of the whole lot rather than piecing it out. The
 lot is also going up on my auction site, {site_url}, but I'd rather do a
 direct deal before it goes live. Can you give me a number on the whole lot?
 
 {signoff}""",
     },
     'shop': {
-        'subject': 'Used OEM German panels - doors, hoods, fenders (New Castle County)',
+        'subject': 'Used OEM German panels, doors, hoods and fenders (New Castle County)',
         'body': """Hi{contact},
 
-I have used OEM body panels for 2011-2016 BMW, Mercedes-Benz and Audi in New
-Castle County - roughly {total_panels} pieces: about {mix_short}.
+I have used OEM body panels for 2011 to 2016 BMW, Mercedes and Audi in New
+Castle County, roughly {total_panels} pieces: about {mix_short}.
 
 {assembly_note} Most are straight and ready to prep. If you're writing
 estimates with used OEM instead of new factory parts, these will come in well
@@ -129,13 +129,13 @@ photos. The full lot is listed at {site_url}.
 {signoff}""",
     },
     'webform': {
-        'subject': '{total_panels}-piece German body panel lot - local pickup',
-        'body': """Local to New Castle County - I have roughly {total_panels} used OEM German
-body panels (2011-2016 BMW / Mercedes-Benz / Audi): about {mix_short}. Those
+        'subject': '{total_panels} piece German body panel lot, local pickup',
+        'body': """Local to New Castle County. I have roughly {total_panels} used OEM German
+body panels (2011 to 2016 BMW / Mercedes / Audi): about {mix_short}. Those
 are ballpark counts, not an itemised list. {assembly_note}
 
 All in one place, loads onto a box truck or trailer in a single trip. Rather
-than me guess at what it's worth, come look at the lot and price it yourself -
+than me guess at what it's worth, come look at the lot and price it yourself,
 or I can send photos first.
 
 It's going up on my auction site, {site_url}, but I'd rather deal direct
@@ -144,12 +144,12 @@ with a local yard before it goes live. Who should I talk to?
 {signoff}""",
     },
     'liquidator': {
-        'subject': 'Quote request - commercial liquidation of a {total_panels}-piece parts lot',
+        'subject': 'Quote request for commercial liquidation of a {total_panels} piece parts lot',
         'body': """Hi{contact},
 
 I'd like a quote on liquidating a commercial parts inventory:
 
-  Asset:     ~{total_panels} used OEM German auto body panels (2011-2016)
+  Asset:     ~{total_panels} used OEM German auto body panels (2011 to 2016)
   Mix:       approximately {mix_short} (estimated, not yet itemised)
   Location:  Single location, New Castle County, DE
   Appraisal: {wholesale_range} wholesale / {retail_range} at individual retail
@@ -217,10 +217,10 @@ def build_email(lead, result=None, template=None, seller_name='',
                  if result['assembly_count'] >= door_count
                  else '{} of the doors are complete assemblies'
                       .format(result['assembly_count']))
-        assembly_note = ('{} - glass, regulator, latch and wiring still in.'
+        assembly_note = ('{}. Glass, regulator, latch and wiring still in.'
                          .format(which))
 
-    money = lambda p: '${:,.0f} - ${:,.0f}'.format(p[0], p[1])   # noqa: E731
+    money = lambda p: '${:,.0f} to ${:,.0f}'.format(p[0], p[1])   # noqa: E731
     fields = {
         'contact': contact,
         'site_url': SITE_URL,
