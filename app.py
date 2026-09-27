@@ -89,6 +89,27 @@ if database_url.startswith('postgres://'):
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Render sets RENDER=true. Local dev runs on plain http, where a Secure cookie never comes back.
+app.config['SESSION_COOKIE_SECURE'] = bool(os.environ.get('RENDER'))
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+# The static half gets the same set from web/public/_headers. Change both together.
+SECURITY_HEADERS = {
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'X-Frame-Options': 'SAMEORIGIN',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+    'Content-Security-Policy': "frame-ancestors 'self'; object-src 'none'; base-uri 'self'; upgrade-insecure-requests",
+}
+
+
+@app.after_request
+def _security_headers(response):
+    for k, v in SECURITY_HEADERS.items():
+        response.headers.setdefault(k, v)
+    return response
+
 # Single source for the password rule: the register route enforces it and
 # register.html quotes it, so the hint and the check cannot drift apart again.
 MIN_PASSWORD_LENGTH = 8
@@ -109,6 +130,9 @@ BUSINESS = {
     'address_city': 'Newark, DE 19702',
 }
 app.jinja_env.globals['BUSINESS'] = BUSINESS
+
+# Same default as web/app/layout.tsx, so canonical URLs on both halves name one origin.
+app.jinja_env.globals['SITE_URL'] = os.environ.get('SITE_URL', 'https://auctiongera.bid').rstrip('/')
 
 # Tawk.to chat widget renders only when BOTH are set (Render > Environment).
 # Get the two IDs from the widget embed code: embed.tawk.to/<property>/<widget>
@@ -839,7 +863,7 @@ def init_db():
             admin = User.query.filter_by(username='admin').first()
             if admin is None:
                 admin = User(username='admin',
-                             email=os.environ.get('ADMIN_EMAIL', 'admin@auctiongera.com'),
+                             email=os.environ.get('ADMIN_EMAIL', BUSINESS['email']),
                              is_admin=True)
                 db.session.add(admin)
                 print('[OK] Admin user created from ADMIN_PASSWORD')

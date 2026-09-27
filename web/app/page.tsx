@@ -2,6 +2,7 @@ import { getLots } from "@/lib/lots";
 import HomeView from "@/components/HomeView";
 
 export const metadata = {
+  alternates: { canonical: "/" },
   description:
     "A barn of stored car parts, sold lot by lot at open auction. Inspect in person, bid online, pay cash on pickup.",
 };

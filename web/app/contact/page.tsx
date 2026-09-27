@@ -3,7 +3,8 @@ import Reveal from "@/components/Reveal";
 import { BUSINESS } from "@/lib/business";
 
 export const metadata = {
-  title: "Contact",
+  alternates: { canonical: "/contact" },
+  title: "Contact: Book an Inspection or Ask About a Lot",
   description:
     "Book an inspection, send a want list, or ask about a lot. We reply to everything.",
 };

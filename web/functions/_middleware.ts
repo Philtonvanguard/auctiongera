@@ -35,6 +35,12 @@ const shouldProxy = (pathname: string) =>
 export const onRequest: PagesFunction<Env> = async (context) => {
   const url = new URL(context.request.url);
 
+  // One host. www served every page with a 200, splitting search signals across two origins.
+  if (url.hostname.startsWith("www.")) {
+    url.hostname = url.hostname.slice(4);
+    return Response.redirect(url.toString(), 301);
+  }
+
   // /api/contact is handled by this project's own function, not Flask.
   if (url.pathname === "/api/contact" || !shouldProxy(url.pathname)) {
     return context.next();

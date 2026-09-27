@@ -37,17 +37,17 @@
   <div class="opt-card">
     <form id="optOutForm">
       <div class="form-group">
-        <label class="form-label">Email Address *</label>
+        <label class="form-label" for="email">Email Address *</label>
         <input type="email" id="email" name="email" class="form-control" required placeholder="you@email.com" {% if current_user.is_authenticated %}value="{{ current_user.email }}"{% endif %}/>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Username <span style="color:var(--text-muted);font-weight:400">(optional, helps us find your record)</span></label>
+        <label class="form-label" for="username">Username <span style="color:var(--text-muted);font-weight:400">(optional, helps us find your record)</span></label>
         <input type="text" id="username" name="username" class="form-control" placeholder="Your AuctionGera username" {% if current_user.is_authenticated %}value="{{ current_user.username }}"{% endif %}/>
       </div>
 
       <div class="form-group">
-        <label class="form-label">What would you like to do? *</label>
+        <label class="form-label" for="notes">What would you like to do? *</label>
         <div class="opt-radio-group">
           <label class="opt-radio-row">
             <input type="radio" name="request" value="unsubscribe" required/>

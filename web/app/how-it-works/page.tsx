@@ -2,7 +2,8 @@ import Link from "next/link";
 import Reveal from "@/components/Reveal";
 
 export const metadata = {
-  title: "How It Works",
+  alternates: { canonical: "/how-it-works" },
+  title: "How Bidding, Inspection and Pickup Work",
   description:
     "Bidding, winning, inspection, and cash-on-pickup collection terms for AuctionGera lots.",
 };

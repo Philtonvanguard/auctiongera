@@ -1,0 +1,11 @@
+# AuctionGera
+
+> A barn of stored car parts, sold lot by lot at open auction. Inspect in person, bid online, pay cash on pickup. Operated by Vipelex LLC, Delaware.
+
+## Pages
+- [Current lots](https://auctiongera.bid/lots): every lot open, opening soon or recently closed, with condition and location
+- [The Barn](https://auctiongera.bid/the-barn): where the parts come from
+- [How it works](https://auctiongera.bid/how-it-works): bidding, winning, inspection and cash-on-pickup terms
+- [Contact](https://auctiongera.bid/contact): book an inspection, send a want list, ask about a lot
+- [Terms](https://auctiongera.bid/terms)
+- [Privacy policy](https://auctiongera.bid/privacy)

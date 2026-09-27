@@ -1,7 +1,8 @@
 import Reveal from "@/components/Reveal";
 
 export const metadata = {
-  title: "The Barn",
+  alternates: { canonical: "/the-barn" },
+  title: "The Barn: Decades of Stored Car Parts",
   description:
     "Where the parts come from: one barn, stored dry for decades, now being emptied lot by lot.",
 };

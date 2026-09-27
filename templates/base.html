@@ -6,10 +6,13 @@
   <title>{% block title %}AuctionGera | Barn-Find Car Parts at Auction{% endblock %}</title>
   <meta name="description" content="A barn of stored car parts, sold lot by lot at open auction. Inspect in person, bid online, pay cash on pickup.">
   <meta property="og:site_name" content="AuctionGera">
-  <meta property="og:title" content="AuctionGera | Barn-Find Car Parts at Auction">
+  <link rel="canonical" href="{{ SITE_URL }}{{ request.path }}">
+  {% if request.endpoint in ('login', 'register') %}<meta name="robots" content="noindex, follow">{% endif %}
+  <meta property="og:url" content="{{ SITE_URL }}{{ request.path }}">
+  <meta property="og:title" content="{{ self.title() }}">
   <meta property="og:description" content="A barn of stored car parts, sold lot by lot at open auction. Inspect in person, bid online, pay cash on pickup.">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="/static/images/lot-barn-loft.jpg">
+  <meta property="og:image" content="{{ SITE_URL }}/static/images/lot-barn-loft.jpg">
   {# Gold diamond, matching the wordmark on the marketing site. The previous
      mark was left over from what this platform used to sell. Jinja comment,
      not HTML, so the note stays out of the page served to visitors. #}
