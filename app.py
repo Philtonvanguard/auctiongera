@@ -475,9 +475,37 @@ def safe_next(target):
     """
     if not target:
         return None
-    if not target.startswith('/') or target.startswith('//'):
+    # Browsers read "/\evil.example" as "//evil.example", so a backslash in the
+    # second position is the same escape.
+    if not target.startswith('/') or target[1:2] in ('/', '\\'):
         return None
     return target
+
+
+# Failed sign-ins per account, so a password cannot be guessed at full speed.
+# Keyed on the typed name rather than the IP: behind the Pages proxy Render
+# sees Cloudflare's address, not the visitor's.
+# ponytail: per-process dict. Render runs one gunicorn worker; move to the DB
+# if the service ever scales past one instance.
+LOGIN_FAILS = {}
+LOGIN_WINDOW = timedelta(minutes=15)
+LOGIN_MAX_FAILS = 10
+
+
+def recent_login_fails(key):
+    cutoff = datetime.now(timezone.utc) - LOGIN_WINDOW
+    fails = [t for t in LOGIN_FAILS.get(key, []) if t > cutoff]
+    if fails:
+        LOGIN_FAILS[key] = fails
+    else:
+        LOGIN_FAILS.pop(key, None)
+    return len(fails)
+
+
+def record_login_fail(key):
+    if len(LOGIN_FAILS) > 10000:  # a spray of junk names cannot grow this forever
+        LOGIN_FAILS.clear()
+    LOGIN_FAILS.setdefault(key, []).append(datetime.now(timezone.utc))
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -499,10 +527,17 @@ def login():
                 .filter(db.or_(db.func.lower(User.username) == lowered,
                                db.func.lower(User.email) == lowered))
                 .first())
+        # One counter per account, whether they typed the username or the email.
+        key = f'user:{user.id}' if user else lowered
+        if recent_login_fails(key) >= LOGIN_MAX_FAILS:
+            flash('Too many failed sign-in attempts for this account. Wait 15 minutes and try again.', 'danger')
+            return render_template('login.html'), 429
         if user and user.check_password(password):
+            LOGIN_FAILS.pop(key, None)
             login_user(user, remember=request.form.get('remember') == 'on')
             flash(f'Welcome back, {user.username}!', 'success')
             return redirect(safe_next(request.args.get('next')) or url_for('index'))
+        record_login_fail(key)
         flash('Invalid username or password.', 'danger')
     return render_template('login.html')
 
@@ -534,6 +569,11 @@ def terms():
 @app.route('/privacy')
 def privacy():
     return render_template('privacy.html')
+
+
+@app.route('/accessibility')
+def accessibility():
+    return render_template('accessibility.html')
 
 
 # The five choices offered on the opt-out page. Anything else is rejected

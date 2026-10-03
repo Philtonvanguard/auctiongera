@@ -23,6 +23,7 @@ const PROXY_PREFIXES = [
   "/terms",
   "/privacy",
   "/opt-out",
+  "/accessibility",
   "/static/",
   "/api/hit",
   "/api/lots",

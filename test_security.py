@@ -549,6 +549,41 @@ def test_api_me_is_never_cached():
     assert 'no-store' in res.headers.get('Cache-Control', ''), res.headers
 
 
+@check
+def test_login_locks_after_repeated_failures():
+    """Ten wrong passwords lock the account for the window, and the right
+    password is refused while locked. Otherwise the limit is decoration."""
+    client = A.app.test_client()
+    client.post('/register', data=dict(
+        username='Throttled', email='throttled@example.com',
+        password='right password 1', confirm_password='right password 1'))
+    client.get('/logout')
+    A.LOGIN_FAILS.clear()
+    for _ in range(A.LOGIN_MAX_FAILS):
+        assert client.post('/login', data=dict(username='throttled', password='wrong')).status_code == 200
+    res = client.post('/login', data=dict(username='Throttled@Example.com', password='right password 1'))
+    assert res.status_code == 429, 'a locked account still accepted a sign-in attempt'
+    A.LOGIN_FAILS.clear()
+    res = client.post('/login', data=dict(username='throttled', password='right password 1'))
+    assert res.status_code == 302, 'the right password failed once the lock cleared'
+
+
+@check
+def test_next_param_cannot_leave_the_site():
+    for bad in ['https://evil.example', '//evil.example', '/\\evil.example']:
+        assert A.safe_next(bad) is None, bad
+    assert A.safe_next('/auction/1') == '/auction/1'
+
+
+@check
+def test_accessibility_statement_is_linked_from_every_flask_page():
+    client = A.app.test_client()
+    res = client.get('/accessibility')
+    assert res.status_code == 200 and b'Accessibility' in res.data
+    for path in ['/', '/privacy', '/terms', '/login']:
+        assert b'href="/accessibility"' in client.get(path).data, path
+
+
 if __name__ == '__main__':
     for fn in CHECKS:
         fn()

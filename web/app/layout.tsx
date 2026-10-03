@@ -194,6 +194,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <li><a href="/terms" className="hover:text-body">Terms of Service</a></li>
                 <li><a href="/privacy" className="hover:text-body">Privacy Policy</a></li>
                 <li><a href="/opt-out" className="hover:text-body">Opt Out / Data Requests</a></li>
+                <li><a href="/accessibility" className="hover:text-body">Accessibility</a></li>
               </ul>
             </div>
 

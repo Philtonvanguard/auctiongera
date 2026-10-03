@@ -93,6 +93,22 @@ body {
     linear-gradient(to bottom, rgba(11,18,34,.30) 0%, rgba(11,18,34,.55) 58%, var(--color-ink) 100%),
     linear-gradient(to right, rgba(11,18,34,.72) 0%, rgba(11,18,34,.10) 62%);
 }
+.hero-pause {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 10;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgba(255,255,255,.45);
+  border-radius: 6px;
+  background: rgba(11,18,34,.75);
+  color: #fff;
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.hero-pause:hover { background: rgba(11,18,34,.95); }
 
 /* ── Micro-interactions ────────────────────────────────────────────────────
    Transforms and opacity only. Animating box-shadow or border-color forces

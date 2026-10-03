@@ -1029,7 +1029,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 /* <address> defaults to italic, which reads as emphasis rather than a postal
    address sitting under three plain links. */
 .footer-address { font-style: normal; color: var(--text-muted); font-size: 0.86rem; line-height: 1.6; }
-.footer-copy { color: rgba(143,159,186,0.7); font-size: 0.82rem; text-align: center; }
+.footer-copy { color: var(--text-muted); font-size: 0.82rem; text-align: center; } /* was 70% alpha: 4.0:1, under 4.5:1 */
 
 /* ══════════════════════════════════════════ RESPONSIVE */
 @media (max-width: 900px) {
@@ -1112,3 +1112,9 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   content: ""; display: block; height: 3px; margin-top: -3px;
   background: var(--primary);
 }
+
+/* Skip link: first focusable element, visible on focus */
+.skip-link{position:absolute;left:-9999px;top:0;z-index:10001;background:#D4AF37;color:#0A0A0A;padding:10px 18px;font-weight:700;text-decoration:none;border-radius:0 0 6px 0}.skip-link:focus{left:0}
+
+/* Links inside legal text need more than color to stand out (WCAG 1.4.1) */
+.legal-wrap p a, .legal-wrap li a { text-decoration: underline; }

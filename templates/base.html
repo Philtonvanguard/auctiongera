@@ -23,6 +23,7 @@
   {% block extra_head %}{% endblock %}
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 
 <!-- ── SVG Icon Sprite ── -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -86,7 +87,7 @@
 </div>
 
 <!-- ── Main ── -->
-<main>{% block content %}{% endblock %}</main>
+<main id="main">{% block content %}{% endblock %}</main>
 
 <!-- ── Footer ── -->
 <footer class="footer">
@@ -113,6 +114,7 @@
         <a href="{{ url_for('terms') }}">Terms of Service</a>
         <a href="{{ url_for('privacy') }}">Privacy Policy</a>
         <a href="{{ url_for('opt_out') }}">Opt Out / Data Requests</a>
+        <a href="{{ url_for('accessibility') }}">Accessibility</a>
       </div>
       <div class="footer-col">
         <div class="footer-col-title">Contact</div>
