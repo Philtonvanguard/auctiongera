@@ -1,0 +1,119 @@
+{% extends "privacy.html" %}
+{# Spanish twin of privacy.html. Styles come from the parent. Keep the section
+   numbers and the "Last updated" date in step with the English page. #}
+{% block title %}Política de privacidad | AuctionGera{% endblock %}
+{% block content %}
+<div class="legal-wrap">
+  <a href="{{ home }}" class="legal-back">← Volver a las subastas</a>
+  <span class="legal-eyebrow">Legal</span>
+  <h1>Política de <em>privacidad</em></h1>
+  <p class="legal-updated">Última actualización: 3 de noviembre de 2026</p>
+
+  {% include "es/_translation_notice.html" %}
+
+  <div class="legal-callout">
+    <strong>Resumen en palabras sencillas:</strong> Recopilamos lo que nos das al registrarte (nombre de usuario, correo electrónico, contraseña) y lo que haces en el sitio (pujas realizadas, artículos ganados o publicados). Lo usamos para operar las subastas y enviar los avisos necesarios. Solo enviamos marketing si lo aceptas. No vendemos tus datos, respetamos el Control Global de Privacidad y puedes pedir que borremos tus datos en cualquier momento.
+  </div>
+
+  <h2>1. Quiénes somos</h2>
+  <p>AuctionGera ("nosotros") es operado por {{ BUSINESS.entity }}, una compañía de responsabilidad limitada de {{ BUSINESS.jurisdiction }}. Somos el responsable del tratamiento de la información personal que se recopila a través de este sitio.</p>
+  <address class="legal-address">
+    {{ BUSINESS.entity }}<br>
+    {{ BUSINESS.address_line }}<br>
+    {{ BUSINESS.address_city }}<br>
+    <a href="mailto:{{ BUSINESS.email }}">{{ BUSINESS.email }}</a> &middot;
+    <a href="tel:{{ BUSINESS.phone }}">{{ BUSINESS.phone_display }}</a>
+  </address>
+
+  <h2>2. Información que recopilamos</h2>
+  <table class="legal-table">
+    <tr><th>Categoría</th><th>Ejemplos</th><th>Origen</th></tr>
+    <tr><td>Identidad</td><td>Nombre de usuario</td><td>Formulario de registro</td></tr>
+    <tr><td>Contacto</td><td>Correo electrónico</td><td>Formulario de registro</td></tr>
+    <tr><td>Autenticación</td><td>Contraseña protegida con hash, actividad de inicio de sesión</td><td>Uso de la cuenta</td></tr>
+    <tr><td>Actividad</td><td>Pujas realizadas, subastas ganadas, artículos publicados</td><td>Uso de la plataforma</td></tr>
+    <tr><td>Transacciones</td><td>Confirmaciones de pago</td><td>Procesadores de pago</td></tr>
+    <tr><td>Comunicaciones</td><td>Solicitudes de soporte, notificaciones enviadas</td><td>Directamente de ti o del sistema</td></tr>
+    <tr><td>Datos técnicos</td><td>Dirección IP, navegador, páginas vistas</td><td>Registros del servidor y de la plataforma</td></tr>
+  </table>
+
+  <h2>3. Cómo usamos tu información</h2>
+  <ul>
+    <li><strong>Operar la plataforma:</strong> autenticar inicios de sesión, registrar pujas, avisarte cuando ganas o cuando alguien supera tu puja, y coordinar recogidas.</li>
+    <li><strong>Procesar pagos:</strong> a través de proveedores de pago integrados. Solo recibimos la confirmación, no los datos de tu tarjeta.</li>
+    <li><strong>Comunicarnos contigo:</strong> correos transaccionales (estado de tus pujas, seguridad de la cuenta, detalles de los artículos ganados). Son necesarios para operar la subasta.</li>
+    <li><strong>Marketing:</strong> solo si lo aceptas por separado. Puedes darte de baja cuando quieras sin que eso afecte los correos transaccionales.</li>
+    <li><strong>Seguridad y prevención de fraude:</strong> detectar pujas ficticias, cuentas falsas y abuso de pagos.</li>
+    <li><strong>Cumplimiento legal:</strong> registros del impuesto sobre las ventas, solicitudes legales y registros de disputas.</li>
+  </ul>
+
+  <h2>4. Bases legales (RGPD)</h2>
+  <p>Si estás en la UE, el EEE o el Reino Unido, nos basamos en:</p>
+  <ul>
+    <li><strong>Contrato:</strong> para prestar el servicio de la plataforma de subastas.</li>
+    <li><strong>Consentimiento:</strong> para los correos de marketing y cualquier cookie opcional.</li>
+    <li><strong>Interés legítimo:</strong> seguridad, prevención de fraude y analítica básica.</li>
+    <li><strong>Obligación legal:</strong> registros fiscales y registros de disputas.</li>
+  </ul>
+
+  <h2>5. Con quién compartimos información</h2>
+  <p>Trabajamos con pocos proveedores de confianza que tratan datos por encargo nuestro. <strong>No</strong> vendemos tus datos.</p>
+  <ul>
+    <li><strong>Proveedores de hosting</strong> (Render para el motor de subastas y la base de datos, Cloudflare para el sitio público): alojamiento y entrega del sitio</li>
+    <li><strong>Tawk.to</strong>: chat en vivo, que solo se carga si lo activas. Consulta la sección 6.</li>
+    <li><strong>Procesadores de pago</strong>: para gestionar las transacciones</li>
+    <li><strong>n8n y servicios de webhooks</strong>: para la automatización interna de eventos de pujas y pagos</li>
+    <li><strong>Proveedores de correo electrónico</strong>: para enviar correos transaccionales y de marketing (este último solo si lo aceptas)</li>
+    <li><strong>Autoridades</strong>: solo cuando la ley lo exige</li>
+    <li><strong>La otra parte de la venta</strong>: información limitada (nombre de usuario, confirmación de la adjudicación, coordinación de la recogida) que se comparte entre comprador y vendedor cuando una subasta cierra con éxito</li>
+  </ul>
+
+  <h2>6. Cookies, analítica y chat</h2>
+  <p>Usamos una cookie de sesión para mantener tu sesión iniciada, además de las cookies habituales de hosting y seguridad. Son estrictamente necesarias y no se pueden desactivar sin que deje de funcionar el inicio de sesión.</p>
+  <p>Nuestra analítica es propia y deliberadamente mínima. Registramos la ruta de la página y el nombre del sitio que te envió aquí. No guardamos direcciones IP, no usamos ninguna cookie de analítica y no hay ningún rastreador publicitario entre sitios en ninguna parte de este sitio. Nada aquí crea un perfil sobre ti, así que no hay ningún aviso que te pida aceptarlo.</p>
+  <p><strong>El chat en vivo es la única excepción.</strong> Nuestro widget de chat lo opera Tawk.to, que usa sus propias cookies y, si iniciaste sesión, recibe tu nombre de usuario y tu correo electrónico para que la persona que te atiende sepa con quién habla. Permanece desactivado hasta que lo actives. Tu elección se guarda en tu propio navegador y nunca se nos envía. Borra los datos del sitio para que te lo volvamos a preguntar.</p>
+
+  <h2>7. Cuánto tiempo conservamos los datos</h2>
+  <ul>
+    <li>Cuenta e historial de pujas: mientras tu cuenta esté activa, más un período razonable después de cerrarla.</li>
+    <li>Registros de transacciones: hasta 7 años (cumplimiento fiscal y contable).</li>
+    <li>Inscripciones en la lista de marketing: hasta que te des de baja; después se eliminan en un plazo de 30 días.</li>
+    <li>Registros del servidor: normalmente de 30 a 90 días.</li>
+  </ul>
+
+  <h2>8. Tus derechos</h2>
+  <p>Según tu jurisdicción (RGPD, RGPD del Reino Unido, CCPA/CPRA, etc.), puedes tener derecho a:</p>
+  <ul>
+    <li>Acceder a los datos que tenemos sobre ti</li>
+    <li>Corregir datos inexactos</li>
+    <li>Borrar tus datos ("derecho al olvido")</li>
+    <li>Limitar el tratamiento de tus datos u oponerte a él</li>
+    <li>Recibir una copia de tus datos en un formato portátil</li>
+    <li>Retirar tu consentimiento en cualquier momento</li>
+    <li>Presentar una queja ante la autoridad de protección de datos de tu país</li>
+  </ul>
+  <p>Escribe a <a href="mailto:{{ BUSINESS.email }}">{{ BUSINESS.email }}</a> o usa nuestra <a href="{{ url_for('opt_out', lang='es') }}">página de exclusión</a>.</p>
+
+  <h2>9. Derechos de privacidad estatales (California, Colorado, Connecticut y estados similares)</h2>
+  <p>Los residentes de California (CCPA/CPRA), Colorado (CPA), Connecticut (CTDPA), Virginia (VCDPA) y otros estados con leyes comparables tienen derecho a saber qué categorías de información personal recopilamos, a borrarla, a corregirla, a excluirse de su "venta" o de que se "comparta" para publicidad conductual entre contextos, y a no recibir un trato peor por ejercer cualquiera de estos derechos.</p>
+  <p>No vendemos tu información personal y no la compartimos para publicidad conductual entre contextos. Nunca lo hemos hecho.</p>
+  <p>Los estados con leyes integrales de privacidad ahora incluyen Colorado, Connecticut, Delaware, Indiana, Iowa, Kentucky, Maryland, Minnesota, Montana, Nebraska, New Hampshire, New Jersey, Oregon, Rhode Island, Tennessee, Texas, Utah y Virginia. Sus residentes también pueden acceder a sus datos, llevárselos en un formato portátil y excluirse de la publicidad dirigida y de la elaboración de perfiles. No hacemos ninguna de las dos cosas.</p>
+  <p><strong>Apelaciones:</strong> si rechazamos una solicitud, responde al correo con nuestra decisión escribiendo la palabra "Appeal" (o "Apelación"). Respondemos las apelaciones en un plazo de 45 días. Si rechazamos tu apelación, puedes comunicarte con la oficina del fiscal general de tu estado.</p>
+
+  <p><strong>Control Global de Privacidad.</strong> Si tu navegador o una extensión envía una señal de Control Global de Privacidad (GPC), la tratamos como una solicitud de exclusión válida desde el momento en que llega. En la práctica, eso significa que el chat de terceros nunca se carga para ti y que nunca te pedimos aceptarlo. No necesitas llenar un formulario, enviar un correo ni crear una cuenta para que tenga efecto, y no registramos que enviaste la señal.</p>
+  <p>Para ejercer cualquier otro derecho, usa la <a href="{{ url_for('opt_out', lang='es') }}">página de exclusión y solicitudes de datos</a>. Recibes un número de referencia en cuanto guardamos tu solicitud. Respondemos en un plazo de 30 días, y normalmente en menos de 72 horas.</p>
+
+  <h2>10. Menores de edad</h2>
+  <p>AuctionGera es solo para personas mayores de 18 años. No recopilamos a sabiendas datos de menores. Si crees que un menor se registró, contáctanos y borraremos la cuenta.</p>
+
+  <h2>11. Seguridad</h2>
+  <p>Usamos HTTPS en todo el sitio, contraseñas protegidas con hash, copias de seguridad cifradas y proveedores de hosting y procesamiento reconocidos. Ningún sistema es perfectamente seguro. Si una filtración de datos te afecta, te lo notificaremos a ti y a las autoridades correspondientes según lo exija la ley.</p>
+
+  <h2>12. Cambios a esta política</h2>
+  <p>Podemos actualizar esta política. Anunciaremos los cambios importantes en esta página con una nueva fecha de "Última actualización" y, cuando se requiera, por correo electrónico o con un aviso dentro del sitio.</p>
+
+  <h2>13. Contacto</h2>
+  <p>Preguntas sobre privacidad o solicitudes de derechos: <a href="mailto:{{ BUSINESS.email }}">{{ BUSINESS.email }}</a>, o llama al <a href="tel:{{ BUSINESS.phone }}">{{ BUSINESS.phone_display }}</a>.</p>
+
+</div>
+{% endblock %}

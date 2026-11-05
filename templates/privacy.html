@@ -18,7 +18,7 @@
 .legal-callout strong{color:var(--primary)}
 .legal-back{display:inline-block;color:var(--primary);font-size:.88rem;margin-bottom:24px}
 .legal-table{width:100%;border-collapse:collapse;margin:18px 0;font-size:.92rem}
-.legal-table th,.legal-table td{padding:11px 13px;border:1px solid var(--border);text-align:left;vertical-align:top}
+.legal-table th,.legal-table td{padding:11px 13px;border:1px solid var(--border);text-align:left;vertical-align:top;overflow-wrap:anywhere;hyphens:auto}
 .legal-table th{background:var(--bg-card);color:var(--primary);font-weight:700}
 </style>
 {% endblock %}
@@ -27,7 +27,7 @@
   <a href="{{ url_for('index') }}" class="legal-back">← Back to auctions</a>
   <span class="legal-eyebrow">Legal</span>
   <h1>Privacy <em>Policy</em></h1>
-  <p class="legal-updated">Last updated: September 5, 2026</p>
+  <p class="legal-updated">Last updated: November 3, 2026</p>
 
   <div class="legal-callout">
     <strong>Plain-English summary:</strong> We collect what you give us at signup (username, email, password) and what you do on the site (bids placed, items won or listed). We use it to run auctions and send required notices. Marketing only goes out if you opt in. We do not sell your data, we honor Global Privacy Control, and you can request deletion at any time.
@@ -117,6 +117,8 @@
   <h2>9. State Privacy Rights (California, Colorado, Connecticut and similar)</h2>
   <p>Residents of California (CCPA/CPRA), Colorado (CPA), Connecticut (CTDPA), Virginia (VCDPA) and other states with comparable statutes have the right to know what categories of personal information we collect, the right to delete it, the right to correct it, the right to opt out of "sale" or "sharing" for cross-context behavioral advertising, and the right not to be treated worse for exercising any of these.</p>
   <p>We do not sell your personal information and we do not share it for cross-context behavioral advertising. We never have.</p>
+  <p>The states with comprehensive privacy laws now include Colorado, Connecticut, Delaware, Indiana, Iowa, Kentucky, Maryland, Minnesota, Montana, Nebraska, New Hampshire, New Jersey, Oregon, Rhode Island, Tennessee, Texas, Utah and Virginia. Their residents can also access and port their data and opt out of targeted advertising and profiling. We do neither.</p>
+  <p><strong>Appeals:</strong> if we decline a request, reply to our decision email with the word "Appeal". We answer appeals within 45 days. If we deny your appeal, you may contact your state attorney general.</p>
 
   <p><strong>Global Privacy Control.</strong> If your browser or extension sends a GPC signal, we treat it as a valid opt-out on arrival. In practice that means third-party chat never loads for you and we never ask you to accept it. You do not need to fill in a form, send an email, or create an account for this to take effect, and we do not log the fact that you sent the signal.</p>
   <p>To exercise any other right, use the <a href="{{ url_for('opt_out') }}">Opt-Out and Data Requests page</a>. You get a reference number as soon as your request is stored. We reply within 30 days, and usually inside 72 hours.</p>

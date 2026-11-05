@@ -1117,4 +1117,5 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 .skip-link{position:absolute;left:-9999px;top:0;z-index:10001;background:#D4AF37;color:#0A0A0A;padding:10px 18px;font-weight:700;text-decoration:none;border-radius:0 0 6px 0}.skip-link:focus{left:0}
 
 /* Links inside legal text need more than color to stand out (WCAG 1.4.1) */
-.legal-wrap p a, .legal-wrap li a { text-decoration: underline; }
+.legal-wrap p a, .legal-wrap li a, .legal-callout a,
+.form-footer a, .form-group label a { text-decoration: underline; }

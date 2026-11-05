@@ -1,0 +1,88 @@
+{% extends "terms.html" %}
+{# Spanish twin of terms.html. Styles come from the parent. Keep the section
+   numbers and the "Last updated" date in step with the English page. #}
+{% block title %}Términos del servicio | AuctionGera{% endblock %}
+{% block content %}
+<div class="legal-wrap">
+  <a href="{{ home }}" class="legal-back">← Volver a las subastas</a>
+  <span class="legal-eyebrow">Legal</span>
+  <h1>Términos del <em>servicio</em></h1>
+  <p class="legal-updated">Última actualización: 5 de septiembre de 2026</p>
+
+  {% include "es/_translation_notice.html" %}
+
+  <div class="legal-callout">
+    <strong>Resumen en palabras sencillas:</strong> Crea una cuenta, explora las subastas y haz pujas reales. Una puja ganadora es vinculante. Pagas y recoges lo que ganas. Conectamos a compradores y vendedores, y no somos dueños de los artículos que se subastan ni damos garantía sobre ellos.
+  </div>
+
+  <h2>1. A quién obligan estos Términos</h2>
+  <p>Estos Términos rigen tu uso de <a href="{{ home }}">AuctionGera</a>, operado por {{ BUSINESS.entity }}, una compañía de responsabilidad limitada de {{ BUSINESS.jurisdiction }} ("nosotros"). Al crear una cuenta, publicar un artículo o hacer una puja, tú (el "Usuario") aceptas estos Términos.</p>
+  <address class="legal-address">
+    {{ BUSINESS.entity }}<br>
+    {{ BUSINESS.address_line }}<br>
+    {{ BUSINESS.address_city }}<br>
+    <a href="mailto:{{ BUSINESS.email }}">{{ BUSINESS.email }}</a> &middot;
+    <a href="tel:{{ BUSINESS.phone }}">{{ BUSINESS.phone_display }}</a>
+  </address>
+
+  <h2>2. El servicio</h2>
+  <p>AuctionGera es una plataforma de subastas en línea de autopartes guardadas y recuperadas. Los lotes salen de un solo granero e incluyen asientos, paneles, ruedas, molduras y ensambles completos. Ofrecemos:</p>
+  <ul>
+    <li>Registro y autenticación de usuarios</li>
+    <li>Herramientas para publicar y explorar subastas</li>
+    <li>El sistema de pujas y sus notificaciones</li>
+    <li>Coordinación opcional de pagos a través de proveedores integrados</li>
+  </ul>
+
+  <h2>3. Requisitos</h2>
+  <p>Para usar AuctionGera debes tener al menos 18 años y capacidad legal para celebrar contratos vinculantes. Al registrarte, confirmas ambas cosas.</p>
+
+  <h2>4. Cómo funcionan las pujas</h2>
+  <ul>
+    <li>Las pujas son <strong>ofertas vinculantes</strong>. La puja más alta al cierre de la subasta gana, sujeta a cualquier precio de reserva.</li>
+    <li>No puedes retirar una puja después de hacerla, salvo en caso de un error evidente que nos informes de inmediato.</li>
+    <li>Si ganas, aceptas pagar el monto ganador más cualquier comisión, impuesto o costo de envío o recogida que corresponda.</li>
+    <li>No pagar o no recoger puede llevar a la suspensión de tu cuenta y a la pérdida de cualquier depósito.</li>
+  </ul>
+
+  <h2>5. Publicaciones y vendedores</h2>
+  <ul>
+    <li>Debes ser dueño del artículo que publicas o tener autorización para venderlo.</li>
+    <li>Las publicaciones deben ser exactas. Una descripción engañosa puede llevar a que retiremos la publicación y suspendamos la cuenta.</li>
+    <li>Aceptas respetar la puja ganadora y completar la transacción de buena fe.</li>
+  </ul>
+
+  <h2>6. Comisiones</h2>
+  <p>Las tarifas de publicación, las comisiones y las tarifas de procesamiento de pagos se indican en cada publicación o en el panel de tu cuenta. Las tarifas pueden cambiar con aviso previo, y las tarifas nuevas se aplican a las publicaciones creadas después del cambio.</p>
+
+  <h2>7. Conducta en la cuenta</h2>
+  <p>Aceptas no:</p>
+  <ul>
+    <li>Hacer pujas que no piensas cumplir (pujas ficticias, cuentas falsas, abuso de retiros)</li>
+    <li>Publicar artículos robados, falsificados o ilegales</li>
+    <li>Manipular subastas mediante acuerdos entre postores, bots de último segundo más allá de un uso razonable o aprovechando fallas de la plataforma</li>
+    <li>Acosar, amenazar o maltratar al personal, a los vendedores o a otros postores</li>
+    <li>Evadir la plataforma para cerrar fuera de AuctionGera una transacción con alguien que conociste a través de ella</li>
+  </ul>
+  <p>Nos reservamos el derecho de suspender o cancelar cuentas por infracciones.</p>
+
+  <h2>8. Nuestro papel</h2>
+  <p>AuctionGera es un punto de encuentro. No somos parte de las transacciones entre compradores y vendedores. No garantizamos el estado, la autenticidad, la propiedad ni la idoneidad de ningún artículo publicado. No somos responsables de recogidas fallidas, artículos descritos de forma engañosa ni disputas entre usuarios, aunque ayudaremos de buena fe y podremos suspender a quienes actúen de mala fe.</p>
+
+  <h2>9. Comunicaciones</h2>
+  <p>Al crear una cuenta, aceptas recibir correos transaccionales (confirmaciones de puja, avisos de que alguien superó tu puja, notificaciones de adjudicación, seguridad de la cuenta). Los correos de marketing solo se envían si los aceptas por separado. Date de baja cuando quieras con el enlace que trae cada correo o desde nuestra <a href="{{ url_for('opt_out', lang='es') }}">página de exclusión</a>.</p>
+
+  <h2>10. Exenciones y limitación de responsabilidad</h2>
+  <p>El servicio se ofrece "tal cual". En la máxima medida permitida por la ley, nuestra responsabilidad total por cualquier reclamo se limita a la cantidad mayor entre (a) las comisiones que nos pagaste en los 12 meses anteriores al reclamo y (b) $100. No somos responsables de daños indirectos, incidentales o consecuentes, incluidas las ganancias perdidas o los artículos que no se recogieron.</p>
+
+  <h2>11. Ley aplicable</h2>
+  <p>Estos Términos se rigen por las leyes de los Estados Unidos y del estado en el que está registrado AuctionGera. Las disputas se resolverán en esa jurisdicción.</p>
+
+  <h2>12. Cambios a estos Términos</h2>
+  <p>Podemos actualizar estos Términos. Anunciaremos los cambios importantes en esta página con una nueva fecha de "Última actualización" y, cuando se requiera, por correo electrónico o con un aviso dentro del sitio.</p>
+
+  <h2>13. Contacto</h2>
+  <p>¿Preguntas? Escribe a <a href="mailto:{{ BUSINESS.email }}">{{ BUSINESS.email }}</a> o llama al <a href="tel:{{ BUSINESS.phone }}">{{ BUSINESS.phone_display }}</a>.</p>
+
+</div>
+{% endblock %}

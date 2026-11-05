@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DICT, type Lang } from "@/lib/i18n";
 
 type Errors = Partial<Record<"name" | "email" | "message", string>>;
 type State = "idle" | "sending" | "sent" | "failed";
@@ -8,7 +9,8 @@ type State = "idle" | "sending" | "sent" | "failed";
 const FIELD =
   "mt-1.5 w-full rounded-lg border bg-card-2 px-4 py-2.5 text-body placeholder:text-muted/60 focus:outline-none";
 
-export default function ContactForm() {
+export default function ContactForm({ lang }: { lang: Lang }) {
+  const t = DICT[lang].form;
   const [state, setState] = useState<State>("idle");
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState("");
@@ -19,7 +21,7 @@ export default function ContactForm() {
     setErrors({});
     setFormError("");
 
-    const data = Object.fromEntries(new FormData(event.currentTarget));
+    const data = { ...Object.fromEntries(new FormData(event.currentTarget)), lang };
 
     try {
       const res = await fetch("/api/contact", {
@@ -35,10 +37,10 @@ export default function ContactForm() {
       }
       // Field errors go next to the field; everything else goes to the top.
       if (json.errors) setErrors(json.errors);
-      setFormError(json.error ?? "Please check the highlighted fields and try again.");
+      setFormError(json.error ?? t.checkFields);
       setState("failed");
     } catch {
-      setFormError("Could not reach the server. Check your connection and try again.");
+      setFormError(t.offline);
       setState("failed");
     }
   }
@@ -46,11 +48,8 @@ export default function ContactForm() {
   if (state === "sent") {
     return (
       <div role="status" className="rounded-2xl border border-success/40 bg-success/10 p-8">
-        <h2 className="font-display text-2xl text-success">Message sent</h2>
-        <p className="mt-2 text-muted">
-          We will get back to you shortly. If it is urgent and you do not hear back,
-          send it again rather than assuming it arrived.
-        </p>
+        <h2 className="font-display text-2xl text-success">{t.sentTitle}</h2>
+        <p className="mt-2 text-muted">{t.sentBody}</p>
       </div>
     );
   }
@@ -64,7 +63,7 @@ export default function ContactForm() {
       )}
 
       <div>
-        <label htmlFor="name" className="text-sm font-medium">Your name</label>
+        <label htmlFor="name" className="text-sm font-medium">{t.name}</label>
         <input
           id="name" name="name" type="text" required autoComplete="name"
           aria-invalid={!!errors.name}
@@ -75,7 +74,7 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="email" className="text-sm font-medium">Email</label>
+        <label htmlFor="email" className="text-sm font-medium">{t.email}</label>
         <input
           id="email" name="email" type="email" required autoComplete="email"
           aria-invalid={!!errors.email}
@@ -86,12 +85,10 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="message" className="text-sm font-medium">
-          What are you after?
-        </label>
+        <label htmlFor="message" className="text-sm font-medium">{t.message}</label>
         <textarea
           id="message" name="message" rows={6} required
-          placeholder="Make, model, year, and the part you are hunting."
+          placeholder={t.placeholder}
           aria-invalid={!!errors.message}
           aria-describedby={errors.message ? "message-error" : undefined}
           className={`${FIELD} ${errors.message ? "border-danger" : "border-line focus:border-gold"}`}
@@ -101,7 +98,7 @@ export default function ContactForm() {
 
       {/* Honeypot. Hidden from people and from screen readers, visible to bots. */}
       <div aria-hidden className="absolute left-[-9999px]">
-        <label htmlFor="company">Company</label>
+        <label htmlFor="company">{t.company}</label>
         <input id="company" name="company" type="text" tabIndex={-1} autoComplete="off" />
       </div>
 
@@ -110,7 +107,7 @@ export default function ContactForm() {
         disabled={state === "sending"}
         className="press rounded-lg bg-gold px-6 py-3 font-semibold text-ink transition-colors hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {state === "sending" ? "Sending..." : "Send message"}
+        {state === "sending" ? t.sending : t.send}
       </button>
     </form>
   );

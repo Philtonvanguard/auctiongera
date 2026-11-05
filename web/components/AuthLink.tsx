@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DICT, href, type Lang } from "@/lib/i18n";
 
 type Me =
   | { authenticated: true; username: string; is_admin: boolean }
@@ -17,7 +18,8 @@ type Me =
  * and what a crawler sees, then corrects itself once /api/me answers. A failed
  * request leaves the sign-in link in place, which is the safe way to be wrong.
  */
-export default function AuthLink({ className = "" }: { className?: string }) {
+export default function AuthLink({ lang, className = "" }: { lang: Lang; className?: string }) {
+  const t = DICT[lang].auth;
   const [me, setMe] = useState<Me | null>(null);
 
   useEffect(() => {
@@ -39,15 +41,15 @@ export default function AuthLink({ className = "" }: { className?: string }) {
     return (
       <span className={`flex items-center gap-3 text-sm ${className}`}>
         <span className="text-muted">
-          Signed in as <span className="text-body">{me.username}</span>
+          {t.signedInAs} <span className="text-body">{me.username}</span>
         </span>
         {me.is_admin && (
           <a href="/admin" className="underline-grow text-gold hover:text-gold-light">
-            Admin
+            {t.admin}
           </a>
         )}
         <a href="/logout" className="underline-grow text-muted hover:text-body">
-          Sign out
+          {t.signOut}
         </a>
       </span>
     );
@@ -55,10 +57,10 @@ export default function AuthLink({ className = "" }: { className?: string }) {
 
   return (
     <a
-      href="/login"
+      href={href(lang, "/login")}
       className={`press rounded-lg border border-gold/50 px-4 py-2 text-sm font-semibold text-gold transition-colors hover:bg-gold hover:text-ink ${className}`}
     >
-      Sign in to bid
+      {t.signIn}
     </a>
   );
 }

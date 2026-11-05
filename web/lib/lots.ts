@@ -69,11 +69,11 @@ export async function fetchLots(): Promise<Lot[] | null> {
 export const byStatus = (lots: Lot[], status: LotStatus) =>
   lots.filter((l) => l.status === status);
 
-export const money = (n: number) =>
-  n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+export const money = (n: number, locale = "en-US") =>
+  n.toLocaleString(locale, { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
 /** Absolute date. Live countdowns belong on the Flask bid page, not here. */
-export const closesOn = (iso: string) =>
-  new Date(iso + "Z").toLocaleString("en-US", {
+export const closesOn = (iso: string, locale = "en-US") =>
+  new Date(iso + "Z").toLocaleString(locale, {
     month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short",
   });

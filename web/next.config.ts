@@ -16,6 +16,13 @@ const FLASK_PATHS = [
   "/terms",
   "/privacy",
   "/opt-out",
+  "/accessibility",
+  "/es/login",
+  "/es/register",
+  "/es/terms",
+  "/es/privacy",
+  "/es/opt-out",
+  "/es/accessibility",
   "/api/hit",
   "/api/lots",
   "/static/:path*",
@@ -30,6 +37,10 @@ const nextConfig: NextConfig = {
   // The repo root also carries a package-lock.json (for the docx report script),
   // so Turbopack guesses the wrong workspace root. Pin it to this directory.
   turbopack: { root: path.resolve(process.cwd()) },
+
+  // English and Spanish are separate root layouts, so the 404 has no single
+  // layout to render inside. app/global-not-found.tsx supplies its own.
+  experimental: { globalNotFound: true },
 
   // Dev only. A static export cannot carry rewrites, and declaring them
   // unconditionally just makes `next build` warn about it every time.

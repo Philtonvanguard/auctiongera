@@ -9,6 +9,7 @@ import threading
 from collections import Counter, namedtuple
 import requests as http_requests
 from sqlalchemy import text
+from i18n import _, page_lang
 
 # No default webhook URLs. These used to default to a duckdns host that was
 # decommissioned, so every notification POSTed into the void and the failure was
@@ -133,6 +134,48 @@ app.jinja_env.globals['BUSINESS'] = BUSINESS
 
 # Same default as web/app/layout.tsx, so canonical URLs on both halves name one origin.
 app.jinja_env.globals['SITE_URL'] = os.environ.get('SITE_URL', 'https://auctiongera.bid').rstrip('/')
+
+# ─── Spanish ─────────────────────────────────────────────────────────────────
+# A handful of pages also answer under /es/. bilingual() registers a view twice,
+# passing lang='en' or lang='es', and url_for(endpoint, lang=...) builds either.
+# A bare url_for(endpoint) still gives the English URL, so existing links and
+# login_manager.login_view are unchanged.
+
+def bilingual(rule, **options):
+    def register(view):
+        app.add_url_rule(rule, view_func=view, defaults={'lang': 'en'}, **options)
+        app.add_url_rule('/es' + rule, view_func=view, defaults={'lang': 'es'}, **options)
+        return view
+    return register
+
+
+def home_url(lang):
+    # The Spanish home page is a static Next.js page, not a Flask route.
+    return '/es' if lang == 'es' else url_for('index')
+
+
+def localized(template, lang):
+    return 'es/' + template if lang == 'es' else template
+
+
+@app.context_processor
+def _language():
+    lang = page_lang()
+    other = 'en' if lang == 'es' else 'es'
+    twin = request.endpoint if 'lang' in (request.view_args or {}) else None
+    return {
+        'lang': lang,
+        'home': home_url(lang),
+        # Pages with a twin get hreflang links and a switch to it. The rest
+        # (lot pages, admin) switch to the other language's home page.
+        'alternates': {code: url_for(twin, lang=code) for code in ('en', 'es')} if twin else None,
+        'lang_switch': url_for(twin, lang=other) if twin else home_url(other),
+        'lang_switch_label': 'English' if lang == 'es' else 'Español',
+        'lang_switch_code': other,
+    }
+
+
+app.jinja_env.globals['_'] = _
 
 # Tawk.to chat widget renders only when BOTH are set (Render > Environment).
 # Get the two IDs from the widget embed code: embed.tawk.to/<property>/<widget>
@@ -420,10 +463,10 @@ def auction_status(auction_id):
 
 # ─── Auth ─────────────────────────────────────────────────────────────────────
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
+@bilingual('/register', methods=['GET', 'POST'])
+def register(lang):
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        return redirect(home_url(lang))
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         email = request.form.get('email', '').strip()
@@ -431,27 +474,27 @@ def register():
         confirm = request.form.get('confirm_password', '')
 
         if not all([username, email, password, confirm]):
-            flash('All fields are required.', 'danger')
+            flash(_('All fields are required.'), 'danger')
             return render_template('register.html')
         if password != confirm:
-            flash('Passwords do not match.', 'danger')
+            flash(_('Passwords do not match.'), 'danger')
             return render_template('register.html')
         # The form said "Min. 8 characters" while the input allowed 6 and the
         # server checked nothing at all, so a direct POST could set a one-
         # character password on an account that places money bids. One number,
         # enforced here, and the template hints now quote this same constant.
         if len(password) < MIN_PASSWORD_LENGTH:
-            flash('Password must be at least %d characters.' % MIN_PASSWORD_LENGTH,
+            flash(_('Password must be at least %d characters.') % MIN_PASSWORD_LENGTH,
                   'danger')
             return render_template('register.html')
         # Case-insensitive, because login now matches that way. Allowing both
         # "Phil" and "phil" to exist would make a sign-in attempt ambiguous and
         # hand the account to whichever row came back first.
         if User.query.filter(db.func.lower(User.username) == username.lower()).first():
-            flash('Username already taken.', 'danger')
+            flash(_('Username already taken.'), 'danger')
             return render_template('register.html')
         if User.query.filter(db.func.lower(User.email) == email.lower()).first():
-            flash('Email already registered.', 'danger')
+            flash(_('Email already registered.'), 'danger')
             return render_template('register.html')
 
         user = User(username=username, email=email,
@@ -459,8 +502,8 @@ def register():
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
-        flash('Account created! Please log in.', 'success')
-        return redirect(url_for('login'))
+        flash(_('Account created! Please log in.'), 'success')
+        return redirect(url_for('login', lang=lang))
 
     return render_template('register.html')
 
@@ -508,13 +551,13 @@ def record_login_fail(key):
     LOGIN_FAILS.setdefault(key, []).append(datetime.now(timezone.utc))
 
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
+@bilingual('/login', methods=['GET', 'POST'])
+def login(lang):
     if current_user.is_authenticated:
         # Silently bouncing an already-signed-in user to a static page that
         # still says "Sign in to bid" is what makes login look broken.
-        flash(f'You are already signed in as {current_user.username}.', 'info')
-        return redirect(safe_next(request.args.get('next')) or url_for('index'))
+        flash(_('You are already signed in as %s.') % current_user.username, 'info')
+        return redirect(safe_next(request.args.get('next')) or home_url(lang))
 
     if request.method == 'POST':
         identifier = request.form.get('username', '').strip()
@@ -530,15 +573,15 @@ def login():
         # One counter per account, whether they typed the username or the email.
         key = f'user:{user.id}' if user else lowered
         if recent_login_fails(key) >= LOGIN_MAX_FAILS:
-            flash('Too many failed sign-in attempts for this account. Wait 15 minutes and try again.', 'danger')
+            flash(_('Too many failed sign-in attempts for this account. Wait 15 minutes and try again.'), 'danger')
             return render_template('login.html'), 429
         if user and user.check_password(password):
             LOGIN_FAILS.pop(key, None)
             login_user(user, remember=request.form.get('remember') == 'on')
-            flash(f'Welcome back, {user.username}!', 'success')
-            return redirect(safe_next(request.args.get('next')) or url_for('index'))
+            flash(_('Welcome back, %s!') % user.username, 'success')
+            return redirect(safe_next(request.args.get('next')) or home_url(lang))
         record_login_fail(key)
-        flash('Invalid username or password.', 'danger')
+        flash(_('Invalid username or password.'), 'danger')
     return render_template('login.html')
 
 
@@ -561,19 +604,19 @@ def page_not_found(_e):
 
 # ─── Legal / Compliance ───────────────────────────────────────────────────────
 
-@app.route('/terms')
-def terms():
-    return render_template('terms.html')
+@bilingual('/terms')
+def terms(lang):
+    return render_template(localized('terms.html', lang))
 
 
-@app.route('/privacy')
-def privacy():
-    return render_template('privacy.html')
+@bilingual('/privacy')
+def privacy(lang):
+    return render_template(localized('privacy.html', lang))
 
 
-@app.route('/accessibility')
-def accessibility():
-    return render_template('accessibility.html')
+@bilingual('/accessibility')
+def accessibility(lang):
+    return render_template(localized('accessibility.html', lang))
 
 
 # The five choices offered on the opt-out page. Anything else is rejected
@@ -584,20 +627,20 @@ PRIVACY_REQUEST_KINDS = {
 }
 
 
-@app.route('/opt-out', methods=['GET', 'POST'])
-def opt_out():
+@bilingual('/opt-out', methods=['GET', 'POST'])
+def opt_out(lang):
     if request.method == 'GET':
-        return render_template('opt_out.html')
+        return render_template(localized('opt_out.html', lang))
 
     data = request.get_json(silent=True) or request.form
     email = (data.get('email') or '').strip()[:120]
     kind = (data.get('request') or '').strip()
-    local, _, domain = email.partition('@')
+    local, _at, domain = email.partition('@')
 
     if not local or '.' not in domain:
-        return jsonify({'error': 'Enter a valid email address.'}), 400
+        return jsonify({'error': _('Enter a valid email address.')}), 400
     if kind not in PRIVACY_REQUEST_KINDS:
-        return jsonify({'error': 'Choose what you would like us to do.'}), 400
+        return jsonify({'error': _('Choose what you would like us to do.')}), 400
 
     privacy_request = PrivacyRequest(
         email=email,
@@ -626,10 +669,12 @@ def opt_out():
         'Email: %s\n'
         'Username: %s\n'
         'Notes: %s\n'
+        'Language: %s\n'
         'Received: %s UTC\n'
         % (privacy_request.id, kind, email,
            privacy_request.username or '(not given)',
            privacy_request.notes or '(none)',
+           'Spanish (sent from /es/opt-out)' if lang == 'es' else 'English',
            privacy_request.created_at.strftime('%Y-%m-%d %H:%M:%S')),
         reply_to=email)
 

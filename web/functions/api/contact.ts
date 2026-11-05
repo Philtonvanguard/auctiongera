@@ -19,6 +19,34 @@ type Field = "name" | "email" | "message";
 
 const EMAILIT_ENDPOINT = "https://api.emailit.com/v2/emails";
 
+// The form sends lang: "es" from the /es/contact page, so a Spanish visitor
+// reads Spanish errors. Anything else gets English.
+const MESSAGES = {
+  en: {
+    name: "Please enter your name.",
+    nameLong: "That name is too long.",
+    email: "Please enter a valid email address.",
+    emailLong: "That email address is too long.",
+    message: "Please tell us a little more.",
+    messageLong: "Please keep this under 5000 characters.",
+    malformed: "Malformed request.",
+    unconfigured: "Messages are not being delivered right now. Please email us directly.",
+    failed: "We could not send that just now. Please try again in a minute.",
+  },
+  es: {
+    name: "Escribe tu nombre.",
+    nameLong: "Ese nombre es demasiado largo.",
+    email: "Escribe un correo electrónico válido.",
+    emailLong: "Ese correo electrónico es demasiado largo.",
+    message: "Cuéntanos un poco más.",
+    messageLong: "Escribe menos de 5000 caracteres.",
+    malformed: "Solicitud no válida.",
+    unconfigured: "Los mensajes no se están entregando en este momento. Escríbenos directamente por correo.",
+    failed: "No pudimos enviarlo en este momento. Inténtalo de nuevo en un minuto.",
+  },
+};
+type Messages = (typeof MESSAGES)["en"];
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -27,7 +55,7 @@ const json = (body: unknown, status = 200) =>
 
 /** Server-side validation. The client validates too, for feedback speed only:
  *  this is the boundary that actually decides. */
-function validate(body: Record<string, unknown>) {
+function validate(body: Record<string, unknown>, m: Messages) {
   const errors: Partial<Record<Field, string>> = {};
   const get = (k: Field) => (typeof body[k] === "string" ? (body[k] as string).trim() : "");
 
@@ -35,13 +63,13 @@ function validate(body: Record<string, unknown>) {
   const email = get("email");
   const message = get("message");
 
-  if (name.length < 2) errors.name = "Please enter your name.";
-  if (name.length > 100) errors.name = "That name is too long.";
+  if (name.length < 2) errors.name = m.name;
+  if (name.length > 100) errors.name = m.nameLong;
   // Deliberately loose. Strict email regexes reject valid addresses.
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = "Please enter a valid email address.";
-  if (email.length > 254) errors.email = "That email address is too long.";
-  if (message.length < 10) errors.message = "Please tell us a little more.";
-  if (message.length > 5000) errors.message = "Please keep this under 5000 characters.";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = m.email;
+  if (email.length > 254) errors.email = m.emailLong;
+  if (message.length < 10) errors.message = m.message;
+  if (message.length > 5000) errors.message = m.messageLong;
 
   return { errors, values: { name, email, message } };
 }
@@ -55,22 +83,24 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   try {
     body = await context.request.json();
   } catch {
-    return json({ ok: false, error: "Malformed request." }, 400);
+    return json({ ok: false, error: MESSAGES.en.malformed }, 400);
   }
+  const spanish = body.lang === "es";
+  const m = spanish ? MESSAGES.es : MESSAGES.en;
 
   // Honeypot: real people leave it empty. Accept silently so bots learn nothing.
   if (typeof body.company === "string" && body.company.length > 0) {
     return json({ ok: true });
   }
 
-  const { errors, values } = validate(body);
+  const { errors, values } = validate(body, m);
   if (Object.keys(errors).length > 0) return json({ ok: false, errors }, 422);
 
   const { EMAILIT_API_KEY, CONTACT_FROM_EMAIL, CONTACT_TO_EMAIL } = context.env;
   if (!EMAILIT_API_KEY || !CONTACT_FROM_EMAIL || !CONTACT_TO_EMAIL) {
     console.error("Emailit is not configured; contact form submission dropped");
     return json(
-      { ok: false, error: "Messages are not being delivered right now. Please email us directly." },
+      { ok: false, error: m.unconfigured },
       503,
     );
   }
@@ -93,6 +123,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
           "",
           `Name:  ${oneLine(values.name)}`,
           `Email: ${oneLine(values.email)}`,
+          ...(spanish ? ["Sent from the Spanish page (/es/contact)."] : []),
           "",
           values.message,
         ].join("\n"),
@@ -106,7 +137,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
   } catch (err) {
     console.error("contact send failed:", err);
-    return json({ ok: false, error: "We could not send that just now. Please try again in a minute." }, 502);
+    return json({ ok: false, error: m.failed }, 502);
   }
 
   return json({ ok: true });

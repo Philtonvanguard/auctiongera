@@ -4,8 +4,11 @@ Two hosts, one domain.
 
 | Half | Host | Serves |
 |---|---|---|
-| Marketing site (`web/`) | Cloudflare Pages | `/`, `/lots`, `/the-barn`, `/how-it-works`, `/contact` |
-| Auction engine (`app.py`) | Render | `/auction/*`, `/login`, `/register`, `/admin/*`, `/terms`, `/privacy`, `/opt-out`, `/api/lots` |
+| Marketing site (`web/`) | Cloudflare Pages | `/`, `/lots`, `/the-barn`, `/how-it-works`, `/contact`, and their Spanish twins under `/es` |
+| Auction engine (`app.py`) | Render | `/auction/*`, `/login`, `/register`, `/admin/*`, `/terms`, `/privacy`, `/opt-out`, `/accessibility`, `/api/lots`, plus `/es/` twins of login, register and the four legal pages |
+
+Spanish twins on the Render side must deploy before the Pages build that links to
+them: deploy Render first.
 
 Cloudflare is the front door. `web/functions/_middleware.ts` proxies the Render
 paths, so both halves share one origin and the login cookie works everywhere.

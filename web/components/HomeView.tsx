@@ -6,26 +6,10 @@ import { useLiveLots } from "@/lib/useLiveLots";
 import LotCard from "@/components/LotCard";
 import Reveal from "@/components/Reveal";
 import HeroMedia from "@/components/HeroMedia";
+import { DICT, href, type Lang } from "@/lib/i18n";
 
-const STEPS = [
-  {
-    n: "01",
-    title: "Come look at it",
-    body: "Photos only tell you so much. Inspection days let you put hands on a part before you commit to a number.",
-  },
-  {
-    n: "02",
-    title: "Bid online",
-    body: "Create a free account and bid from anywhere. Every lot lists condition, location, and what is actually included.",
-  },
-  {
-    n: "03",
-    title: "Pay cash, take it home",
-    body: "Highest bid at close wins. We contact you the same day to arrange pickup. Payment is cash on collection.",
-  },
-];
-
-export default function HomeView({ initial }: { initial: Lot[] }) {
+export default function HomeView({ initial, lang }: { initial: Lot[]; lang: Lang }) {
+  const t = DICT[lang].home;
   const lots = useLiveLots(initial);
   const live = byStatus(lots, "live");
   const upcoming = byStatus(lots, "upcoming");
@@ -37,41 +21,38 @@ export default function HomeView({ initial }: { initial: Lot[] }) {
           The gradient stays underneath the footage. It is what renders while
           the video buffers, and what a viewer sees if the file 404s. */}
       <section className="relative isolate overflow-hidden border-b border-line/70 bg-gradient-to-b from-navy/40 to-transparent">
-        <HeroMedia poster="/hero-poster.jpg" src="/hero.mp4" />
+        <HeroMedia poster="/hero-poster.jpg" src="/hero.mp4" lang={lang} />
 
         <div className="relative mx-auto max-w-6xl px-5 py-24 sm:py-32">
           <Reveal>
             <p className="text-sm font-medium uppercase tracking-[0.2em] text-gold">
-              Barn-find car parts
+              {t.eyebrow}
             </p>
           </Reveal>
 
           <Reveal delay={80}>
             <h1 className="mt-4 max-w-3xl font-display text-4xl leading-[1.1] sm:text-6xl">
-              A barn full of parts that have not moved in decades.
+              {t.title}
             </h1>
           </Reveal>
 
           <Reveal delay={160}>
-            <p className="mt-6 max-w-xl text-lg text-muted">
-              Seats, panels, wheels, trim, and the odd complete assembly. Stored dry, sold
-              honestly, lot by lot. What you see in the photos is what sits in the barn.
-            </p>
+            <p className="mt-6 max-w-xl text-lg text-muted">{t.lead}</p>
           </Reveal>
 
           <Reveal delay={240}>
             <div className="mt-9 flex flex-wrap gap-3">
               <Link
-                href="/lots"
+                href={href(lang, "/lots")}
                 className="press rounded-lg bg-gold px-6 py-3 font-semibold text-ink transition-colors hover:bg-gold-light"
               >
-                See current lots
+                {t.seeLots}
               </Link>
               <Link
-                href="/the-barn"
+                href={href(lang, "/the-barn")}
                 className="press rounded-lg border border-line bg-ink/40 px-6 py-3 font-semibold backdrop-blur transition-colors hover:border-gold/50 hover:text-gold"
               >
-                What is in the barn
+                {t.whatsInBarn}
               </Link>
             </div>
           </Reveal>
@@ -79,16 +60,16 @@ export default function HomeView({ initial }: { initial: Lot[] }) {
           <Reveal delay={320}>
             <dl className="mt-14 grid max-w-lg grid-cols-3 gap-6 border-t border-line pt-8">
               <div>
-                <dt className="text-xs uppercase tracking-wider text-muted">Open now</dt>
+                <dt className="text-xs uppercase tracking-wider text-muted">{t.openNow}</dt>
                 <dd className="font-display text-3xl text-gold">{live.length}</dd>
               </div>
               <div>
-                <dt className="text-xs uppercase tracking-wider text-muted">Coming up</dt>
+                <dt className="text-xs uppercase tracking-wider text-muted">{t.comingUp}</dt>
                 <dd className="font-display text-3xl">{upcoming.length}</dd>
               </div>
               <div>
-                <dt className="text-xs uppercase tracking-wider text-muted">Buyer fees</dt>
-                <dd className="font-display text-3xl">None</dd>
+                <dt className="text-xs uppercase tracking-wider text-muted">{t.buyerFees}</dt>
+                <dd className="font-display text-3xl">{t.none}</dd>
               </div>
             </dl>
           </Reveal>
@@ -99,9 +80,9 @@ export default function HomeView({ initial }: { initial: Lot[] }) {
       <section className="mx-auto max-w-6xl px-5 py-16" aria-labelledby="lots-heading">
         <Reveal>
           <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <h2 id="lots-heading" className="font-display text-3xl">Current lots</h2>
-            <Link href="/lots" className="underline-grow text-sm text-gold hover:text-gold-light">
-              View all lots
+            <h2 id="lots-heading" className="font-display text-3xl">{t.currentLots}</h2>
+            <Link href={href(lang, "/lots")} className="underline-grow text-sm text-gold hover:text-gold-light">
+              {t.viewAll}
             </Link>
           </div>
         </Reveal>
@@ -112,23 +93,20 @@ export default function HomeView({ initial }: { initial: Lot[] }) {
               // Stagger caps at the third card. Past that the last item in a
               // six-card grid waits half a second, which reads as lag.
               <Reveal as="li" key={lot.id} delay={Math.min(i, 2) * 90} className="lift">
-                <LotCard lot={lot} />
+                <LotCard lot={lot} lang={lang} />
               </Reveal>
             ))}
           </ul>
         ) : (
           <Reveal>
             <div className="mt-8 rounded-2xl border border-dashed border-line p-12 text-center">
-              <p className="font-display text-xl">Nothing open at the moment</p>
-              <p className="mx-auto mt-2 max-w-md text-muted">
-                Lots go up in batches as they come out of the barn. Create a free account
-                and you will be first to know when the next one opens.
-              </p>
+              <p className="font-display text-xl">{t.emptyTitle}</p>
+              <p className="mx-auto mt-2 max-w-md text-muted">{t.emptyBody}</p>
               <a
-                href="/register"
+                href={href(lang, "/register")}
                 className="press mt-6 inline-block rounded-lg bg-gold px-6 py-3 font-semibold text-ink hover:bg-gold-light"
               >
-                Create a free account
+                {t.createAccount}
               </a>
             </div>
           </Reveal>
@@ -145,26 +123,23 @@ export default function HomeView({ initial }: { initial: Lot[] }) {
           <div className="lg:sticky lg:top-32 lg:self-start">
             <Reveal>
               <h2 id="how-heading" className="font-display text-3xl sm:text-4xl">
-                How it works
+                {t.howTitle}
               </h2>
-              <p className="mt-4 text-muted">
-                Three steps, no buyer fees, no reserve games. The barn has been shut for
-                a long time and we would rather these parts went to someone who wants them.
-              </p>
+              <p className="mt-4 text-muted">{t.howBody}</p>
               <Link
-                href="/how-it-works"
+                href={href(lang, "/how-it-works")}
                 className="underline-grow mt-8 inline-block text-sm text-gold hover:text-gold-light"
               >
-                Read the full terms
+                {t.fullTerms}
               </Link>
             </Reveal>
           </div>
 
           <ol className="space-y-14">
-            {STEPS.map((step) => (
-              <Reveal as="li" key={step.n}>
+            {t.steps.map((step, i) => (
+              <Reveal as="li" key={i}>
                 <div className="flex items-baseline gap-5">
-                  <span className="font-display text-5xl text-gold/30 sm:text-6xl">{step.n}</span>
+                  <span className="font-display text-5xl text-gold/30 sm:text-6xl">{String(i + 1).padStart(2, "0")}</span>
                   <div>
                     <h3 className="font-display text-2xl">{step.title}</h3>
                     <p className="mt-3 max-w-md text-muted">{step.body}</p>

@@ -12,12 +12,29 @@
  *
  * No consent state leaves the browser. The choice lives in localStorage, so
  * there is no profile to build and nothing to subpoena.
+ *
+ * Text is English or Spanish, following <html lang>, as lux-brand-kit/ga.js
+ * does on the other Vipelex sites. Both halves set lang="es" on /es/ pages.
  */
 (function () {
   'use strict';
 
   var KEY = 'ag-chat-consent';
   var cfg = window.__AG_CHAT;
+  var T = /^es\b/i.test(document.documentElement.lang || '') ? {
+    title: 'Chat en vivo',
+    body: 'Nuestro chat lo opera Tawk.to, que usa sus propias cookies. Permanece ' +
+      'desactivado hasta que lo actives. Todo lo demás en este sitio funciona sin ' +
+      'cookies ni rastreo.',
+    yes: 'Activar el chat',
+    no: 'No, gracias'
+  } : {
+    title: 'Live chat',
+    body: 'Our chat widget is run by Tawk.to and sets its own cookies. It stays off ' +
+      'until you say so. Everything else here runs without cookies or tracking.',
+    yes: 'Turn on chat',
+    no: 'No thanks'
+  };
 
   // Chat not configured on this deploy. Nothing to gate, nothing to ask.
   if (!cfg || !cfg.p || !cfg.w) return;
@@ -50,13 +67,11 @@
     box.setAttribute('role', 'dialog');
     box.setAttribute('aria-labelledby', 'consent-title');
     box.innerHTML =
-      '<p id="consent-title" class="consent-title">Live chat</p>' +
-      '<p class="consent-body">Our chat widget is run by Tawk.to and sets its own ' +
-      'cookies. It stays off until you say so. Everything else here runs without ' +
-      'cookies or tracking.</p>' +
+      '<p id="consent-title" class="consent-title">' + T.title + '</p>' +
+      '<p class="consent-body">' + T.body + '</p>' +
       '<div class="consent-actions">' +
-        '<button type="button" class="consent-btn consent-btn-yes">Turn on chat</button>' +
-        '<button type="button" class="consent-btn consent-btn-no">No thanks</button>' +
+        '<button type="button" class="consent-btn consent-btn-yes">' + T.yes + '</button>' +
+        '<button type="button" class="consent-btn consent-btn-no">' + T.no + '</button>' +
       '</div>';
 
     function close() {

@@ -1,50 +1,58 @@
 {% extends "base.html" %}
-{% block title %}Register — AuctionGera{% endblock %}
+{% block title %}{{ _('Register — AuctionGera') }}{% endblock %}
 {% block content %}
 <div class="form-page">
   <div class="form-card">
     <div class="form-card-header">
       <div class="form-card-logo"><svg class="icon icon-xl"><use href="#i-mark"/></svg></div>
-      <h1 class="form-card-title">Create Account</h1>
-      <p class="form-card-subtitle">Join AuctionGera and start bidding on sheds</p>
+      <h1 class="form-card-title">{{ _('Create Account') }}</h1>
+      <p class="form-card-subtitle">{{ _('Join AuctionGera and start bidding on sheds') }}</p>
     </div>
 
     <form method="POST">
       <div class="form-group">
-        <label class="form-label" for="f-username">Username</label>
-        <input type="text" id="f-username" name="username" class="form-control" placeholder="Choose a username" required autofocus>
+        <label class="form-label" for="f-username">{{ _('Username') }}</label>
+        <input type="text" id="f-username" name="username" class="form-control" placeholder="{{ _('Choose a username') }}" required autofocus>
       </div>
       <div class="form-group">
-        <label class="form-label" for="f-email">Email</label>
-        <input type="email" id="f-email" name="email" class="form-control" placeholder="your@email.com" required>
+        <label class="form-label" for="f-email">{{ _('Email') }}</label>
+        <input type="email" id="f-email" name="email" class="form-control" placeholder="{{ _('your@email.com') }}" required>
       </div>
       <div class="form-group">
-        <label class="form-label" for="f-password">Password</label>
+        <label class="form-label" for="f-password">{{ _('Password') }}</label>
         <input type="password" id="f-password" name="password" class="form-control"
-               placeholder="Min. {{ MIN_PASSWORD_LENGTH }} characters"
+               placeholder="{{ _('Min. %d characters') % MIN_PASSWORD_LENGTH }}"
                required minlength="{{ MIN_PASSWORD_LENGTH }}">
       </div>
       <div class="form-group">
-        <label class="form-label" for="f-confirm_password">Confirm Password</label>
-        <input type="password" id="f-confirm_password" name="confirm_password" class="form-control" placeholder="Repeat password" required>
+        <label class="form-label" for="f-confirm_password">{{ _('Confirm Password') }}</label>
+        <input type="password" id="f-confirm_password" name="confirm_password" class="form-control" placeholder="{{ _('Repeat password') }}" required>
       </div>
       <div class="form-group" style="margin-bottom:10px">
         <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:.88rem;color:var(--text-muted)">
           <input type="checkbox" name="agree_terms" required style="margin-top:3px;flex-shrink:0;accent-color:var(--primary)">
+          {% if lang == 'es' %}
+          <span>Acepto los <a href="{{ url_for('terms', lang='es') }}" target="_blank">Términos del servicio</a> y la <a href="{{ url_for('privacy', lang='es') }}" target="_blank">Política de privacidad</a>. Tengo 18 años o más. *</span>
+          {% else %}
           <span>I agree to the <a href="{{ url_for('terms') }}" target="_blank">Terms of Service</a> and <a href="{{ url_for('privacy') }}" target="_blank">Privacy Policy</a>. I am 18 years of age or older. *</span>
+          {% endif %}
         </label>
       </div>
       <div class="form-group" style="margin-bottom:18px">
         <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:.88rem;color:var(--text-muted)">
           <input type="checkbox" name="marketing_opt_in" style="margin-top:3px;flex-shrink:0;accent-color:var(--primary)">
+          {% if lang == 'es' %}
+          <span>Quiero recibir avisos de subastas, nuevos lotes y correos promocionales ocasionales de AuctionGera. <span style="color:var(--text-muted);font-size:.82rem">(Opcional. Puedes cambiarlo cuando quieras en <a href="{{ url_for('opt_out', lang='es') }}">preferencias</a>.)</span></span>
+          {% else %}
           <span>I'd like to receive auction alerts, new listings, and occasional promotional emails from AuctionGera. <span style="color:var(--text-muted);font-size:.82rem">(Optional — you can change this anytime in <a href="{{ url_for('opt_out') }}">preferences</a>.)</span></span>
+          {% endif %}
         </label>
       </div>
-      <button type="submit" class="btn btn-primary btn-full btn-lg">Create Account</button>
+      <button type="submit" class="btn btn-primary btn-full btn-lg">{{ _('Create Account') }}</button>
     </form>
 
     <div class="form-footer">
-      Already registered? <a href="{{ url_for('login') }}">Login here</a>
+      {{ _('Already registered?') }} <a href="{{ url_for('login', lang=lang) }}">{{ _('Login here') }}</a>
     </div>
   </div>
 </div>

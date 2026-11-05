@@ -1,36 +1,36 @@
 {% extends "base.html" %}
-{% block title %}Login — AuctionGera{% endblock %}
+{% block title %}{{ _('Login — AuctionGera') }}{% endblock %}
 {% block content %}
 <div class="form-page">
   <div class="form-card">
     <div class="form-card-header">
       <div class="form-card-logo"><svg class="icon icon-xl"><use href="#i-mark"/></svg></div>
-      <h1 class="form-card-title">Welcome Back</h1>
-      <p class="form-card-subtitle">Login to AuctionGera to start bidding</p>
+      <h1 class="form-card-title">{{ _('Welcome Back') }}</h1>
+      <p class="form-card-subtitle">{{ _('Login to AuctionGera to start bidding') }}</p>
     </div>
 
     <form method="POST">
       <div class="form-group">
-        <label class="form-label" for="f-username">Username or email</label>
+        <label class="form-label" for="f-username">{{ _('Username or email') }}</label>
         <input type="text" id="f-username" name="username" class="form-control"
-               placeholder="Your username or email" required autofocus
+               placeholder="{{ _('Your username or email') }}" required autofocus
                autocomplete="username" autocapitalize="none" spellcheck="false">
       </div>
       <div class="form-group">
-        <label class="form-label" for="f-password">Password</label>
-        <input type="password" id="f-password" name="password" class="form-control" placeholder="Your password" required>
+        <label class="form-label" for="f-password">{{ _('Password') }}</label>
+        <input type="password" id="f-password" name="password" class="form-control" placeholder="{{ _('Your password') }}" required>
       </div>
       <div class="form-group">
         <label class="form-check">
           <input type="checkbox" name="remember">
-          <span style="color:var(--text-muted);font-size:0.9rem;">Remember me</span>
+          <span style="color:var(--text-muted);font-size:0.9rem;">{{ _('Remember me') }}</span>
         </label>
       </div>
-      <button type="submit" class="btn btn-primary btn-full btn-lg">Login</button>
+      <button type="submit" class="btn btn-primary btn-full btn-lg">{{ _('Login') }}</button>
     </form>
 
     <div class="form-footer">
-      Don't have an account? <a href="{{ url_for('register') }}">Register free</a>
+      {{ _("Don't have an account?") }} <a href="{{ url_for('register', lang=lang) }}">{{ _('Register free') }}</a>
     </div>
   </div>
 </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { DICT, type Lang } from "@/lib/i18n";
 
 /* Background footage for the hero.
  *
@@ -21,10 +22,13 @@ import { useEffect, useRef, useState } from "react";
 export default function HeroMedia({
   poster,
   src,
+  lang,
 }: {
   poster: string;
   src: string;
+  lang: Lang;
 }) {
+  const t = DICT[lang].hero;
   const [motionOK, setMotionOK] = useState(false);
   const [paused, setPaused] = useState(false);
   const video = useRef<HTMLVideoElement>(null);
@@ -70,7 +74,7 @@ export default function HeroMedia({
       </div>
       {motionOK && (
         <button type="button" className="hero-pause" onClick={toggle}>
-          {paused ? "Play background video" : "Pause background video"}
+          {paused ? t.play : t.pause}
         </button>
       )}
     </>

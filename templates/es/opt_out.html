@@ -1,0 +1,125 @@
+{% extends "opt_out.html" %}
+{# Spanish twin of opt_out.html. Styles come from the parent. The form posts to
+   /es/opt-out, which stores the request exactly like the English page and
+   answers with Spanish errors. The request values (unsubscribe, delete...)
+   are the same five, since the server rejects anything else. #}
+{% block title %}Exclusión y solicitudes de datos | AuctionGera{% endblock %}
+{% block content %}
+<div class="legal-wrap">
+  <a href="{{ home }}" class="legal-back">← Volver a las subastas</a>
+  <span class="legal-eyebrow">Tu decisión</span>
+  <h1>Exclusión y <em>solicitudes de datos</em></h1>
+  <p class="legal-lead">Sin preguntas ni complicaciones. Dinos qué quieres y lo resolvemos en un plazo de 30 días. La mayoría de las solicitudes quedan listas en menos de 72 horas.</p>
+
+  {% include "es/_translation_notice.html" %}
+
+  <div class="legal-callout">
+    <strong>Nota:</strong> darte de baja del marketing <em>no</em> afecta los avisos transaccionales de las subastas activas. Si tienes una puja ganadora o una publicación abierta, seguirás recibiendo correos sobre pujas, pagos y recogida hasta que se complete esa transacción.
+  </div>
+
+  <div class="opt-card">
+    <form id="optOutForm">
+      <div class="form-group">
+        <label class="form-label" for="email">Correo electrónico *</label>
+        <input type="email" id="email" name="email" class="form-control" required placeholder="tu@correo.com" {% if current_user.is_authenticated %}value="{{ current_user.email }}"{% endif %}/>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="username">Nombre de usuario <span style="color:var(--text-muted);font-weight:400">(opcional, nos ayuda a encontrar tu registro)</span></label>
+        <input type="text" id="username" name="username" class="form-control" placeholder="Tu nombre de usuario de AuctionGera" {% if current_user.is_authenticated %}value="{{ current_user.username }}"{% endif %}/>
+      </div>
+
+      <fieldset class="form-group" style="border:0;padding:0;margin-inline:0;min-width:0">
+        <legend class="form-label">¿Qué quieres que hagamos? *</legend>
+        <div class="opt-radio-group">
+          <label class="opt-radio-row">
+            <input type="radio" name="request" value="unsubscribe" required/>
+            <span><strong>Darme de baja de los correos de marketing</strong>
+              <small>Deja de recibir boletines y contenido promocional. Los avisos de pujas y subastas siguen llegando.</small></span>
+          </label>
+          <label class="opt-radio-row">
+            <input type="radio" name="request" value="all-comms"/>
+            <span><strong>Detener toda comunicación no esencial</strong>
+              <small>Marketing y seguimientos que no son obligatorios. Solo te contactaremos por pujas activas y artículos ganados.</small></span>
+          </label>
+          <label class="opt-radio-row">
+            <input type="radio" name="request" value="access"/>
+            <span><strong>Pedir una copia de mis datos</strong>
+              <small>Te enviaremos por correo todo lo que tenemos registrado sobre ti (derecho de acceso del RGPD y de la CCPA).</small></span>
+          </label>
+          <label class="opt-radio-row">
+            <input type="radio" name="request" value="delete"/>
+            <span><strong>Borrar mi cuenta y mis datos</strong>
+              <small>Borrado total. Nota: es posible que conservemos registros fiscales y de transacciones cuando la ley lo exija, y las pujas o publicaciones activas deben resolverse primero.</small></span>
+          </label>
+          <label class="opt-radio-row">
+            <input type="radio" name="request" value="ccpa-no-sale"/>
+            <span><strong>No vender ni compartir mi información personal</strong>
+              <small>Para residentes de California. No vendemos datos, pero así queda registrada tu preferencia según la CCPA/CPRA.</small></span>
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="form-group">
+        <label class="form-label" for="notes">Notas adicionales <span style="color:var(--text-muted);font-weight:400">(opcional)</span></label>
+        <textarea id="notes" name="notes" class="form-control" placeholder="¿Algo más que debamos saber?" style="min-height:90px;resize:vertical"></textarea>
+      </div>
+
+      <p id="optOutError" role="alert"></p>
+
+      <button type="submit" class="btn btn-primary btn-full btn-lg">Enviar solicitud</button>
+    </form>
+
+    <div id="confirm">
+      <h3>Solicitud recibida</h3>
+      <p style="color:var(--text)">Tu número de referencia es <strong id="reference"></strong>. Anótalo si quieres darle seguimiento.</p>
+      <p style="color:var(--text)">Respondemos a la dirección que nos diste. La mayoría de las solicitudes se resuelven en menos de 72 horas, y todas dentro de los 30 días que permite la ley.</p>
+    </div>
+  </div>
+
+  <div class="opt-alt">
+    ¿Prefieres el correo? Envía tu solicitud directamente a <a href="mailto:{{ BUSINESS.email }}?subject=Solicitud%20de%20exclusi%C3%B3n">{{ BUSINESS.email }}</a>.
+  </div>
+</div>
+
+<script>
+/* Same flow as the English page: confirm only once the request is stored. */
+(function () {
+  var form = document.getElementById('optOutForm');
+  var button = form.querySelector('button[type="submit"]');
+  var error = document.getElementById('optOutError');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    error.style.display = 'none';
+    button.disabled = true;
+    button.textContent = 'Enviando...';
+
+    fetch('{{ url_for("opt_out", lang="es") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: document.getElementById('email').value,
+        username: document.getElementById('username').value,
+        request: (document.querySelector('input[name="request"]:checked') || {}).value,
+        notes: document.getElementById('notes').value
+      })
+    }).then(function (res) {
+      return res.json().then(function (body) { return { ok: res.ok, body: body }; });
+    }).then(function (result) {
+      if (!result.ok) throw new Error(result.body.error || 'Algo salió mal.');
+      document.getElementById('reference').textContent = 'AG-' + result.body.id;
+      form.style.display = 'none';
+      document.getElementById('confirm').style.display = 'block';
+    }).catch(function (err) {
+      error.textContent = err.message === 'Failed to fetch'
+        ? 'No pudimos conectar con el servidor. Revisa tu conexión o escríbenos directamente con el enlace de abajo.'
+        : err.message;
+      error.style.display = 'block';
+      button.disabled = false;
+      button.textContent = 'Enviar solicitud';
+    });
+  });
+})();
+</script>
+{% endblock %}

@@ -279,7 +279,8 @@ def test_marketing_half_gates_chat_the_same_way():
     all. The gate is now one file shared by both halves, so this guards the two
     ways that can quietly come undone."""
     here = os.path.dirname(os.path.abspath(__file__))
-    layout = open(os.path.join(here, 'web', 'app', 'layout.tsx'),
+    # The shell both root layouts (English and /es/) render.
+    layout = open(os.path.join(here, 'web', 'components', 'SiteLayout.tsx'),
                   encoding='utf-8').read()
     package = open(os.path.join(here, 'web', 'package.json'),
                    encoding='utf-8').read()
@@ -582,6 +583,55 @@ def test_accessibility_statement_is_linked_from_every_flask_page():
     assert res.status_code == 200 and b'Accessibility' in res.data
     for path in ['/', '/privacy', '/terms', '/login']:
         assert b'href="/accessibility"' in client.get(path).data, path
+
+
+@check
+def test_spanish_pages_are_complete_and_reachable():
+    """Each /es/ Flask page must render in Spanish, say the English text
+    prevails on legal pages, keep its forms working, and be proxied by the
+    Pages middleware. An untranslated _() string or an unlisted path would
+    otherwise fail quietly: English on a Spanish page, or a Cloudflare 404."""
+    from i18n import ES
+    here = os.path.dirname(os.path.abspath(__file__))
+
+    used = set()
+    for root, _dirs, files in os.walk(os.path.join(here, 'templates')):
+        for name in files:
+            body = open(os.path.join(root, name), encoding='utf-8').read()
+            used |= set(re.findall(r'''_\((?:'([^']+)'|"([^"]+)")\)''', body))
+    used |= set(re.findall(r"""_\((?:'([^']+)'|"([^"]+)")\)""",
+                           open(os.path.join(here, 'app.py'), encoding='utf-8').read()))
+    missing = {a or b for a, b in used} - set(ES)
+    assert not missing, 'no Spanish for: %s' % sorted(missing)
+
+    spanish = sorted(r.rule for r in A.app.url_map.iter_rules() if r.rule.startswith('/es/'))
+    middleware = open(os.path.join(here, 'web', 'functions', '_middleware.ts'),
+                      encoding='utf-8').read()
+    for rule in spanish:
+        assert '"%s"' % rule in middleware, '%s is not in PROXY_PREFIXES' % rule
+
+    client = A.app.test_client()
+    notice = 'si hay diferencias, prevalece la versión en inglés'
+    for rule in spanish:
+        html = client.get(rule).data.decode()
+        assert '<html lang="es">' in html, rule
+        assert 'hreflang="en" href="https://auctiongera.bid%s"' % rule[3:] in html, rule
+        assert 'Política de privacidad' in html, '%s footer is still English' % rule
+        if rule not in ('/es/login', '/es/register'):
+            assert notice in html, '%s lacks the translation notice' % rule
+    assert '<html lang="en">' in client.get('/privacy').data.decode()
+
+    # Forms post to their own /es/ URL and carry on in Spanish.
+    res = client.post('/es/register', data=dict(
+        username='Hispano', email='hispano@example.com', password='contraseña1',
+        confirm_password='contraseña1'))
+    assert res.status_code == 302 and res.headers['Location'].endswith('/es/login')
+    res = client.post('/es/login', data=dict(username='hispano', password='mal'))
+    assert 'Usuario o contraseña incorrectos.' in res.data.decode()
+    res = client.post('/es/opt-out', json={'email': 'nada', 'request': 'delete'})
+    assert res.status_code == 400 and res.get_json()['error'] == 'Escribe un correo electrónico válido.'
+    res = client.post('/es/login', data=dict(username='hispano', password='contraseña1'))
+    assert res.status_code == 302 and res.headers['Location'].endswith('/es')
 
 
 if __name__ == '__main__':

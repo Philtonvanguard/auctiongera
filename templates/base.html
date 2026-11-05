@@ -1,16 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}AuctionGera | Barn-Find Car Parts at Auction{% endblock %}</title>
-  <meta name="description" content="A barn of stored car parts, sold lot by lot at open auction. Inspect in person, bid online, pay cash on pickup.">
+  <title>{% block title %}{{ _('AuctionGera | Barn-Find Car Parts at Auction') }}{% endblock %}</title>
+  <meta name="description" content="{{ _('A barn of stored car parts, sold lot by lot at open auction. Inspect in person, bid online, pay cash on pickup.') }}">
   <meta property="og:site_name" content="AuctionGera">
   <link rel="canonical" href="{{ SITE_URL }}{{ request.path }}">
+  {% if alternates %}
+  <link rel="alternate" hreflang="en" href="{{ SITE_URL }}{{ alternates.en }}">
+  <link rel="alternate" hreflang="es" href="{{ SITE_URL }}{{ alternates.es }}">
+  <link rel="alternate" hreflang="x-default" href="{{ SITE_URL }}{{ alternates.en }}">
+  {% endif %}
   {% if request.endpoint in ('login', 'register') %}<meta name="robots" content="noindex, follow">{% endif %}
   <meta property="og:url" content="{{ SITE_URL }}{{ request.path }}">
   <meta property="og:title" content="{{ self.title() }}">
-  <meta property="og:description" content="A barn of stored car parts, sold lot by lot at open auction. Inspect in person, bid online, pay cash on pickup.">
+  <meta property="og:description" content="{{ _('A barn of stored car parts, sold lot by lot at open auction. Inspect in person, bid online, pay cash on pickup.') }}">
   <meta property="og:type" content="website">
   <meta property="og:image" content="{{ SITE_URL }}/static/images/lot-barn-loft.jpg">
   {# Gold diamond, matching the wordmark on the marketing site. The previous
@@ -23,7 +28,7 @@
   {% block extra_head %}{% endblock %}
 </head>
 <body>
-<a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main">{{ _('Skip to content') }}</a>
 
 <!-- ── SVG Icon Sprite ── -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -50,27 +55,28 @@
 <!-- ── Navbar ── -->
 <nav class="navbar" id="navbar">
   <div class="nav-container">
-    <a href="{{ url_for('index') }}" class="nav-logo">
+    <a href="{{ home }}" class="nav-logo">
       <span class="logo-mark"><svg class="icon icon-lg"><use href="#i-mark"/></svg></span>
       <span class="logo-text">Auction<strong>Gera</strong></span>
     </a>
 
     <div class="nav-links">
-      <a href="{{ url_for('index') }}" class="nav-link">Auctions</a>
+      <a href="{{ home }}" class="nav-link">{{ _('Auctions') }}</a>
       {% if current_user.is_authenticated %}
         {% if current_user.is_admin %}
           <a href="{{ url_for('admin_dashboard') }}" class="nav-link nav-admin"><svg class="icon icon-sm"><use href="#i-settings"/></svg> Admin</a>
           <a href="{{ url_for('admin_analytics') }}" class="nav-link nav-admin"><svg class="icon icon-sm"><use href="#i-chart"/></svg> Analytics</a>
         {% endif %}
         <span class="nav-user"><svg class="icon icon-sm"><use href="#i-user"/></svg> {{ current_user.username }}</span>
-        <a href="{{ url_for('logout') }}" class="btn btn-outline-sm">Logout</a>
+        <a href="{{ url_for('logout') }}" class="btn btn-outline-sm">{{ _('Logout') }}</a>
       {% else %}
-        <a href="{{ url_for('login') }}" class="nav-link">Login</a>
-        <a href="{{ url_for('register') }}" class="btn btn-primary-sm">Register</a>
+        <a href="{{ url_for('login', lang=lang) }}" class="nav-link">{{ _('Login') }}</a>
+        <a href="{{ url_for('register', lang=lang) }}" class="btn btn-primary-sm">{{ _('Register') }}</a>
       {% endif %}
+      <a href="{{ lang_switch }}" class="nav-link" hreflang="{{ lang_switch_code }}" lang="{{ lang_switch_code }}">{{ lang_switch_label }}</a>
     </div>
 
-    <button class="nav-toggle" aria-label="Menu" onclick="document.querySelector('.nav-links').classList.toggle('open')"><svg class="icon"><use href="#i-menu"/></svg></button>
+    <button class="nav-toggle" aria-label="{{ _('Menu') }}" onclick="document.querySelector('.nav-links').classList.toggle('open')"><svg class="icon"><use href="#i-menu"/></svg></button>
   </div>
 </nav>
 
@@ -98,29 +104,29 @@
           <span class="logo-mark"><svg class="icon icon-lg"><use href="#i-mark"/></svg></span>
           <span class="logo-text">Auction<strong>Gera</strong></span>
         </div>
-        <p>One barn, decades of stored car parts, sold lot by lot. Inspect in person, bid online, pay cash on pickup. No buyer fees.</p>
+        <p>{{ _('One barn, decades of stored car parts, sold lot by lot. Inspect in person, bid online, pay cash on pickup. No buyer fees.') }}</p>
       </div>
       <div class="footer-col">
-        <div class="footer-col-title">Platform</div>
-        <a href="{{ url_for('index') }}">Live Auctions</a>
-        <a href="{{ url_for('index') }}#how">How It Works</a>
+        <div class="footer-col-title">{{ _('Platform') }}</div>
+        <a href="{{ home }}">{{ _('Live Auctions') }}</a>
+        <a href="{{ '/es/how-it-works' if lang == 'es' else url_for('index') ~ '#how' }}">{{ _('How It Works') }}</a>
         {% if not current_user.is_authenticated %}
-          <a href="{{ url_for('register') }}">Create Account</a>
-          <a href="{{ url_for('login') }}">Login</a>
+          <a href="{{ url_for('register', lang=lang) }}">{{ _('Create Account') }}</a>
+          <a href="{{ url_for('login', lang=lang) }}">{{ _('Login') }}</a>
         {% endif %}
       </div>
       <div class="footer-col">
-        <div class="footer-col-title">Legal</div>
-        <a href="{{ url_for('terms') }}">Terms of Service</a>
-        <a href="{{ url_for('privacy') }}">Privacy Policy</a>
-        <a href="{{ url_for('opt_out') }}">Opt Out / Data Requests</a>
-        <a href="{{ url_for('accessibility') }}">Accessibility</a>
+        <div class="footer-col-title">{{ _('Legal') }}</div>
+        <a href="{{ url_for('terms', lang=lang) }}">{{ _('Terms of Service') }}</a>
+        <a href="{{ url_for('privacy', lang=lang) }}">{{ _('Privacy Policy') }}</a>
+        <a href="{{ url_for('opt_out', lang=lang) }}">{{ _('Opt Out / Data Requests') }}</a>
+        <a href="{{ url_for('accessibility', lang=lang) }}">{{ _('Accessibility') }}</a>
       </div>
       <div class="footer-col">
-        <div class="footer-col-title">Contact</div>
+        <div class="footer-col-title">{{ _('Contact') }}</div>
         <a href="mailto:{{ BUSINESS.email }}">{{ BUSINESS.email }}</a>
         <a href="tel:{{ BUSINESS.phone }}">{{ BUSINESS.phone_display }}</a>
-        <a href="sms:{{ BUSINESS.phone }}">Text {{ BUSINESS.phone_display }}</a>
+        <a href="sms:{{ BUSINESS.phone }}">{{ _('Text') }} {{ BUSINESS.phone_display }}</a>
         {# CAN-SPAM wants a real postal address reachable from any page. #}
         <address class="footer-address">
           {{ BUSINESS.entity }}<br>
@@ -130,8 +136,8 @@
       </div>
     </div>
     <div class="footer-copy">
-      © 2026 AuctionGera, operated by {{ BUSINESS.entity }},
-      a {{ BUSINESS.jurisdiction }} limited liability company. All rights reserved.
+      © 2026 {{ _('AuctionGera, operated by %(entity)s, a %(jurisdiction)s limited liability company. All rights reserved.')
+                  | format(entity=BUSINESS.entity, jurisdiction=BUSINESS.jurisdiction) }}
     </div>
   </div>
 </footer>

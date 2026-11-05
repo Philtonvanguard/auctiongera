@@ -1,0 +1,45 @@
+{% extends "accessibility.html" %}
+{# Spanish twin of accessibility.html. Styles come from the parent. Keep the
+   "Last updated" date in step with the English page. #}
+{% block title %}Declaración de accesibilidad | AuctionGera{% endblock %}
+{% block content %}
+<div class="legal-wrap">
+  <span class="legal-eyebrow">Legal</span>
+  <h1>Declaración de <em>accesibilidad</em></h1>
+  <p class="legal-updated">Última actualización: 3 de octubre de 2026</p>
+
+  {% include "es/_translation_notice.html" %}
+
+  <p>AuctionGera (auctiongera.bid) es operado por Vipelex LLC. Queremos que funcione para todos, incluidas las personas que usan el teclado en lugar del mouse, un lector de pantalla, ampliación o subtítulos. Nuestro objetivo son las Pautas de Accesibilidad para el Contenido Web (WCAG) 2.2 en el nivel AA.</p>
+
+  <h2>Estado de conformidad</h2>
+  <p>Este sitio <strong>cumple parcialmente</strong> con las WCAG 2.2 nivel AA. Parcialmente significa que parte del contenido todavía no cumple del todo con la norma. Las limitaciones conocidas aparecen más abajo.</p>
+
+  <h2>Lo que ya tenemos</h2>
+  <ul>
+    <li>Un enlace &ldquo;Saltar al contenido&rdquo; y regiones de la página identificadas (encabezado, contenido principal, pie de página).</li>
+    <li>Los enlaces, los botones y los campos de formulario son elementos HTML estándar, así que funcionan solo con el teclado.</li>
+    <li>Cada campo de formulario tiene una etiqueta de texto, no solo un texto de ejemplo dentro del campo.</li>
+    <li>Las imágenes que transmiten información tienen texto alternativo. Las imágenes decorativas se ocultan a los lectores de pantalla.</li>
+    <li>Nunca se bloquea el zoom con los dedos, y el texto se puede ampliar al 200 por ciento.</li>
+    <li>Nada en el sitio reproduce sonido por sí solo.</li>
+    <li>El video detrás del titular de la página de inicio tiene un botón de pausa, y se reemplaza por una foto fija cuando tu dispositivo pide reducir el movimiento.</li>
+    <li>El aviso de cookies se puede responder con el teclado, y una señal de Control Global de Privacidad se respeta sin preguntarte.</li>
+  </ul>
+
+  <h2>Limitaciones conocidas</h2>
+  <ul>
+    <li>La puja más alta en la página de un lote se actualiza mientras la ves. Es posible que los lectores de pantalla no anuncien una puja nueva hasta que te muevas a ella o recargues la página.</li>
+    <li>Las fotos de los lotes tienen textos alternativos breves. Si necesitas una descripción más completa de una pieza, llama o escribe y te la describimos.</li>
+  </ul>
+
+  <h2>Contenido de terceros</h2>
+  <p>El chat en vivo lo ofrece Tawk.to y solo se carga si lo permites. Les haremos llegar cualquier problema que nos reportes.</p>
+
+  <h2>Comentarios y ayuda</h2>
+  <p>Si alguna parte de este sitio es difícil de usar, escribe a <a href="mailto:{{ BUSINESS.email }}">{{ BUSINESS.email }}</a>. Dinos la dirección de la página y qué salió mal. Intentamos responder en un plazo de cinco días hábiles. Si necesitas algún contenido en otro formato, pídelo y te lo daremos. También puedes llamar o enviar un SMS al {{ BUSINESS.phone_display }}.</p>
+
+  <h2>Cómo lo revisamos</h2>
+  <p>Cada página pública se revisa con un rastreo automático que comprueba encabezados, etiquetas, regiones, textos alternativos y la configuración del zoom, y las páginas principales se prueban con el teclado. Revisamos esta declaración al menos una vez al año y después de cualquier rediseño importante.</p>
+</div>
+{% endblock %}

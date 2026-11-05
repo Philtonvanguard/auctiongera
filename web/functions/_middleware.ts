@@ -24,6 +24,14 @@ const PROXY_PREFIXES = [
   "/privacy",
   "/opt-out",
   "/accessibility",
+  // Spanish twins of the Flask pages. The rest of /es/ is static, so these are
+  // listed one by one rather than as a bare "/es" prefix.
+  "/es/login",
+  "/es/register",
+  "/es/terms",
+  "/es/privacy",
+  "/es/opt-out",
+  "/es/accessibility",
   "/static/",
   "/api/hit",
   "/api/lots",
