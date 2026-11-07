@@ -345,6 +345,22 @@ def test_consent_gate_has_one_source():
         'web/public/js/consent.js differs from static/js/consent.js - edit the Flask copy'
 
 
+@check
+def test_static_export_has_no_nested_segment_files():
+    """A Windows build writes prefetch files as out/lots/__next.x/lots/__PAGE__.txt
+    while the client asks for out/lots/__next.x.lots.__PAGE__.txt, so every
+    prefetch 404s. web/scripts/flatten-segments.mjs (postbuild) fixes the names;
+    this fails if a build skipped it."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    out = os.path.join(here, 'web', 'out')
+    if not os.path.isdir(out):
+        return  # Not built yet.
+    nested = [os.path.relpath(os.path.join(root, d), out)
+              for root, dirs, _files in os.walk(out) for d in dirs
+              if d.startswith('__next.')]
+    assert not nested, 'segment files nested in directories: %s' % nested[:3]
+
+
 def _lot(**kw):
     now = datetime.utcnow()
     defaults = dict(title='t', description='d', shed_type='c', starting_price=1,
